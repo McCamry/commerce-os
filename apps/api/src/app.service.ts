@@ -9,9 +9,8 @@ export class AppService {
     await this.prisma.$queryRaw`SELECT 1`;
 
     return {
-      status: "ok",
+      success: true,
       database: "connected",
-      version: "0.1.0",
     };
   }
 }
