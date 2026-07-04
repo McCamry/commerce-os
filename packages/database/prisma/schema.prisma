@@ -1,10 +1,23 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/client"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Store {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  timezone  String    @default("Asia/Bangkok")
+  currency  String    @default("THB")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([slug])
 }
 
 enum Marketplace {
@@ -23,19 +36,4 @@ enum ProductStatus {
 enum MediaType {
   IMAGE
   VIDEO
-}
-
-model Store {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-
-  timezone  String   @default("Asia/Bangkok")
-  currency  String   @default("THB")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-
-  @@index([slug])
 }

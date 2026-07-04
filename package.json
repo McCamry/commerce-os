@@ -7,12 +7,13 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"},
+    "db:generate": "prisma generate --schema packages/database/prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema packages/database/prisma/schema.prisma",
+    "db:studio": "prisma studio --schema packages/database/prisma/schema.prisma"
+  },
   "devDependencies": {
     "prettier": "^3.7.4",
-    "prisma": "^7.8.0",
+    "prisma": "6.16.3",
     "turbo": "^2.10.2",
     "typescript": "5.9.2"
   },
