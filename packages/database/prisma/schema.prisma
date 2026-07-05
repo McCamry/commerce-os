@@ -7,19 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Store {
-  id        String    @id @default(cuid())
-  name      String
-  slug      String    @unique
-  timezone  String    @default("Asia/Bangkok")
-  currency  String    @default("THB")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-
-  @@index([slug])
-}
-
 enum Marketplace {
   SHOPEE
   LAZADA
@@ -38,62 +25,99 @@ enum MediaType {
   VIDEO
 }
 
+enum RecordStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model Country {
   id        String   @id @default(uuid())
-  code      String   @unique
-  nameTh    String
-  nameEn    String
+  code      String   @unique(map: "uk_country_code")
+  nameTh    String   @map("name_th")
+  nameEn    String   @map("name_en")
 
   provinces Province[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([code], map: "idx_country_code")
+  @@index([nameTh], map: "idx_country_name_th")
+  @@map("countries")
 }
 
 model Province {
-  id        String   @id @default(uuid())
+  id        String @id @default(uuid())
 
-  countryId String
-  country   Country @relation(fields: [countryId], references: [id])
+  countryId String @map("country_id")
 
-  code      String
-  nameTh    String
-  nameEn    String
+  country Country @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  code   String
+  nameTh String @map("name_th")
+  nameEn String @map("name_en")
 
   districts District[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([countryId, code], map: "uk_province_country_code")
+
+  @@index([countryId], map: "idx_province_country")
+  @@index([code], map: "idx_province_code")
+  @@index([nameTh], map: "idx_province_name_th")
+
+  @@map("provinces")
 }
 
 model District {
-  id         String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  provinceId String
-  province   Province @relation(fields: [provinceId], references: [id])
+  provinceId String @map("province_id")
 
-  code       String
-  nameTh     String
-  nameEn     String
+  province Province @relation(fields: [provinceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  code   String
+  nameTh String @map("name_th")
+  nameEn String @map("name_en")
 
   subdistricts Subdistrict[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([provinceId, code], map: "uk_district_province_code")
+
+  @@index([provinceId], map: "idx_district_province")
+  @@index([code], map: "idx_district_code")
+  @@index([nameTh], map: "idx_district_name_th")
+
+  @@map("districts")
 }
 
 model Subdistrict {
-  id         String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  districtId String
-  district   District @relation(fields: [districtId], references: [id])
+  districtId String @map("district_id")
 
-  code       String
+  district District @relation(fields: [districtId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  nameTh     String
-  nameEn     String
+  code String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  nameTh String @map("name_th")
+  nameEn String @map("name_en")
+
+  postalCode String @map("postal_code")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([districtId, code], map: "uk_subdistrict_district_code")
+
+  @@index([districtId], map: "idx_subdistrict_district")
+  @@index([code], map: "idx_subdistrict_code")
+  @@index([nameTh], map: "idx_subdistrict_name_th")
+
+  @@map("subdistricts")
 }
-
