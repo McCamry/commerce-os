@@ -1,28 +1,24 @@
-# CommerceOS Roadmap
+# Commerce OS Roadmap (20 Sprints)
 
-## Phase 1
-- Foundation
-- Authentication
-- Product
-- Category
-- Inventory
+This document outlines the 20-Sprint plan for building Commerce OS.
 
-## Phase 2
-- Orders
-- Customers
-- Dashboard
-
-## Phase 3
-- Shopee Connector
-
-## Phase 4
-- Lazada Connector
-
-## Phase 5
-- TikTok Connector
-
-## Phase 6
-- Website Connector
-
-## Phase 7
-- POS
+- **Sprint 1: Foundation** (Project Structure, Standards, DB Setup, Interceptors)
+- **Sprint 2: Security** (Auth, RBAC, User Management, Stores, Organizations)
+- **Sprint 3: Product** (PIM, Categories, Brands, Variants, Pricing, Media)
+- **Sprint 4: Inventory** (Warehouses, Locations, Stock Ledger, Transfers, Adjustments)
+- **Sprint 5: Purchase** (Procurement, Supplier, PO, Goods Receipt)
+- **Sprint 6: Sales** (Sales Orders, Quotations, Invoicing, Customers)
+- **Sprint 7: Marketplace** (Shopee, Lazada, TikTok Sync)
+- **Sprint 8: OMS** (Order Management System, Routing, Status)
+- **Sprint 9: Shipping** (Carriers, Labels, Tracking, Fulfillment)
+- **Sprint 10: Promotion** (Discounts, Vouchers, Bundles)
+- **Sprint 11: Accounting** (GL, AP, AR, Tax Reporting)
+- **Sprint 12: Dashboard** (Overview, KPIs, Widgets)
+- **Sprint 13: Reports** (Exportable Data, Detailed Analytics)
+- **Sprint 14: Notification** (Email, SMS, Push, In-app Alerts)
+- **Sprint 15: Automation** (Rules Engine, Workflows)
+- **Sprint 16: AI** (Smart Replenishment, Forecasting, NLP Search)
+- **Sprint 17: Mobile** (Warehouse Scanner App, Mobile POS)
+- **Sprint 18: POS** (Point of Sale, Offline Mode, Cash Register)
+- **Sprint 19: BI** (Business Intelligence, Advanced Visualizations)
+- **Sprint 20: Plugin** (App Store, Webhooks, Public API)
