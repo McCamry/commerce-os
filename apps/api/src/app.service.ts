@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
-import { PrismaService } from "./database/prisma.service";
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from './database/prisma.service';
 
 @Injectable()
 export class AppService {
@@ -10,7 +10,7 @@ export class AppService {
 
     return {
       success: true,
-      database: "connected",
+      database: 'connected',
     };
   }
 }
