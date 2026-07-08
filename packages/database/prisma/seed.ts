@@ -151,10 +151,267 @@ async function main() {
     },
   });
 
+  // ==========================================
+  // PRODUCT CATEGORY SEEDING
+  // ==========================================
+  const electronics = await prisma.productCategory.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "ELECT" } },
+    update: { name: "Electronics", status: "ACTIVE", deletedAt: null },
+    create: { organizationId: organization.id, code: "ELECT", name: "Electronics" },
+  });
+
+  const mobilePhones = await prisma.productCategory.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "MOBILE" } },
+    update: { name: "Mobile Phones", parentId: electronics.id, status: "ACTIVE", deletedAt: null },
+    create: { organizationId: organization.id, code: "MOBILE", name: "Mobile Phones", parentId: electronics.id },
+  });
+
+  const beverages = await prisma.productCategory.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "BEV" } },
+    update: { name: "Beverages", status: "ACTIVE", deletedAt: null },
+    create: { organizationId: organization.id, code: "BEV", name: "Beverages" },
+  });
+
+  const coffee = await prisma.productCategory.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "COFFEE" } },
+    update: { name: "Coffee", parentId: beverages.id, status: "ACTIVE", deletedAt: null },
+    create: { organizationId: organization.id, code: "COFFEE", name: "Coffee", parentId: beverages.id },
+  });
+
+  const food = await prisma.productCategory.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "FOOD" } },
+    update: { name: "Food", status: "ACTIVE", deletedAt: null },
+    create: { organizationId: organization.id, code: "FOOD", name: "Food" },
+  });
+
+  // ==========================================
+  // BRAND SEEDING
+  // ==========================================
+  const apple = await prisma.brand.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "APPLE" } },
+    update: { name: "Apple", status: "ACTIVE" },
+    create: { organizationId: organization.id, code: "APPLE", name: "Apple" },
+  });
+
+  const xiaomi = await prisma.brand.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "XIAOMI" } },
+    update: { name: "Xiaomi", status: "ACTIVE" },
+    create: { organizationId: organization.id, code: "XIAOMI", name: "Xiaomi" },
+  });
+
+  // ==========================================
+  // UNIT SEEDING
+  // ==========================================
+  const pcs = await prisma.unit.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "PCS" } },
+    update: { name: "Piece", symbol: "PCS", status: "ACTIVE" },
+    create: { organizationId: organization.id, code: "PCS", name: "Piece", symbol: "PCS" },
+  });
+
+  // ==========================================
+  // TAX SEEDING
+  // ==========================================
+  const vat7 = await prisma.tax.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "VAT7" } },
+    update: { name: "VAT 7%", rate: "7.00", status: "ACTIVE" },
+    create: { organizationId: organization.id, code: "VAT7", name: "VAT 7%", rate: "7.00" },
+  });
+
+  const noVat = await prisma.tax.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "NOVAT" } },
+    update: { name: "No VAT", rate: "0.00", status: "ACTIVE" },
+    create: { organizationId: organization.id, code: "NOVAT", name: "No VAT", rate: "0.00" },
+  });
+
+  // ==========================================
+  // ATTRIBUTE SEEDING
+  // ==========================================
+  const colorAttr = await prisma.attribute.upsert({
+    where: { organizationId_name: { organizationId: organization.id, name: "Color" } },
+    update: {},
+    create: { organizationId: organization.id, name: "Color" },
+  });
+
+  const storageAttr = await prisma.attribute.upsert({
+    where: { organizationId_name: { organizationId: organization.id, name: "Storage" } },
+    update: {},
+    create: { organizationId: organization.id, name: "Storage" },
+  });
+
+  const blackVal = await prisma.attributeValue.upsert({
+    where: { attributeId_value: { attributeId: colorAttr.id, value: "Black" } },
+    update: {},
+    create: { attributeId: colorAttr.id, value: "Black" },
+  });
+
+  const blueVal = await prisma.attributeValue.upsert({
+    where: { attributeId_value: { attributeId: colorAttr.id, value: "Blue" } },
+    update: {},
+    create: { attributeId: colorAttr.id, value: "Blue" },
+  });
+
+  const val128Val = await prisma.attributeValue.upsert({
+    where: { attributeId_value: { attributeId: storageAttr.id, value: "128GB" } },
+    update: {},
+    create: { attributeId: storageAttr.id, value: "128GB" },
+  });
+
+  const val256Val = await prisma.attributeValue.upsert({
+    where: { attributeId_value: { attributeId: storageAttr.id, value: "256GB" } },
+    update: {},
+    create: { attributeId: storageAttr.id, value: "256GB" },
+  });
+
+  // ==========================================
+  // PRODUCT MASTER & VARIANTS SEEDING
+  // ==========================================
+  const iphone17 = await prisma.product.upsert({
+    where: { organizationId_code: { organizationId: organization.id, code: "IP17" } },
+    update: {
+      categoryId: mobilePhones.id,
+      brandId: apple.id,
+      unitId: pcs.id,
+      taxId: vat7.id,
+      name: "iPhone 17",
+      shortName: "IP17",
+      sku: "IP17-MASTER",
+      description: "Next-generation iPhone 17 by Apple",
+      status: "ACTIVE",
+      isActive: true,
+      weight: "0.2500",
+      width: "7.6000",
+      height: "15.0000",
+      length: "0.8000",
+      slug: "iphone-17",
+      metaTitle: "iPhone 17",
+      metaDescription: "Buy Apple iPhone 17 at CommerceOS demo.",
+    },
+    create: {
+      organizationId: organization.id,
+      categoryId: mobilePhones.id,
+      brandId: apple.id,
+      unitId: pcs.id,
+      taxId: vat7.id,
+      code: "IP17",
+      sku: "IP17-MASTER",
+      name: "iPhone 17",
+      shortName: "IP17",
+      description: "Next-generation iPhone 17 by Apple",
+      status: "ACTIVE",
+      isActive: true,
+      weight: "0.2500",
+      width: "7.6000",
+      height: "15.0000",
+      length: "0.8000",
+      slug: "iphone-17",
+      metaTitle: "iPhone 17",
+      metaDescription: "Buy Apple iPhone 17 at CommerceOS demo.",
+    },
+  });
+
+  // Seeding images
+  await prisma.productImage.deleteMany({ where: { productId: iphone17.id } });
+  await prisma.productImage.createMany({
+    data: [
+      { productId: iphone17.id, url: "https://example.com/iphone17-front.jpg", sortOrder: 0, altText: "Front view" },
+      { productId: iphone17.id, url: "https://example.com/iphone17-back.jpg", sortOrder: 1, altText: "Back view" },
+    ],
+  });
+
+  // Helper function to seed variant details
+  const seedVariant = async (sku: string, name: string, attrValues: string[], prices: {type: string, val: string}[], barcodes: {code: string, isDefault: boolean}[], marketplaces: {platform: "SHOPEE" | "LAZADA" | "TIKTOK" | "WEBSITE", extId: string, extVarId?: string}[]) => {
+    const variant = await prisma.productVariant.upsert({
+      where: { productId_sku: { productId: iphone17.id, sku } },
+      update: { name, status: "ACTIVE" },
+      create: { productId: iphone17.id, sku, name },
+    });
+
+    // Clear old details to avoid primary key/unique key collision during re-seed
+    await prisma.productVariantAttributeValue.deleteMany({ where: { variantId: variant.id } });
+    await prisma.productBarcode.deleteMany({ where: { variantId: variant.id } });
+    await prisma.productPrice.deleteMany({ where: { variantId: variant.id } });
+    await prisma.productMarketplace.deleteMany({ where: { variantId: variant.id } });
+
+    // Attributes
+    for (const valId of attrValues) {
+      await prisma.productVariantAttributeValue.create({
+        data: { variantId: variant.id, attributeValueId: valId },
+      });
+    }
+
+    // Barcodes
+    await prisma.productBarcode.createMany({
+      data: barcodes.map(b => ({ variantId: variant.id, barcode: b.code, isDefault: b.isDefault })),
+    });
+
+    // Prices
+    await prisma.productPrice.createMany({
+      data: prices.map(p => ({ variantId: variant.id, priceType: p.type, price: p.val, currency: "THB" })),
+    });
+
+    // Marketplace
+    await prisma.productMarketplace.createMany({
+      data: marketplaces.map(m => ({ variantId: variant.id, marketplace: m.platform, externalProductId: m.extId, externalVariantId: m.extVarId })),
+    });
+  };
+
+  // Variant 1: 128GB Black
+  await seedVariant(
+    "IP17-128-BLK",
+    "iPhone 17 128GB Black",
+    [blackVal.id, val128Val.id],
+    [
+      { type: "Retail", val: "32900.00" },
+      { type: "Wholesale", val: "31000.00" },
+    ],
+    [
+      { code: "885000001", isDefault: true },
+      { code: "885000002", isDefault: false },
+    ],
+    [
+      { platform: "SHOPEE", extId: "SP-12345678", extVarId: "SPV-987654" },
+      { platform: "LAZADA", extId: "LZ-987654", extVarId: "LZV-56789" },
+    ]
+  );
+
+  // Variant 2: 256GB Black
+  await seedVariant(
+    "IP17-256-BLK",
+    "iPhone 17 256GB Black",
+    [blackVal.id, val256Val.id],
+    [
+      { type: "Retail", val: "36900.00" },
+    ],
+    [
+      { code: "885000003", isDefault: true },
+    ],
+    [
+      { platform: "SHOPEE", extId: "SP-12345678", extVarId: "SPV-987655" },
+    ]
+  );
+
+  // Variant 3: 256GB Blue
+  await seedVariant(
+    "IP17-256-BLU",
+    "iPhone 17 256GB Blue",
+    [blueVal.id, val256Val.id],
+    [
+      { type: "Retail", val: "36900.00" },
+    ],
+    [
+      { code: "885000004", isDefault: true },
+    ],
+    [
+      { platform: "SHOPEE", extId: "SP-12345678", extVarId: "SPV-987656" },
+    ]
+  );
+
   console.log({
     country: thailand.code,
     organization: organization.code,
     store: store.code,
+    category: mobilePhones.name,
+    product: iphone17.name,
   });
 }
 

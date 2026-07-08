@@ -21,6 +21,7 @@ enum Marketplace {
 enum ProductStatus {
   DRAFT
   ACTIVE
+  INACTIVE
   ARCHIVED
 }
 
@@ -210,6 +211,12 @@ model Organization {
   subdistrict Subdistrict? @relation(fields: [subdistrictId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   stores Store[]
+  categories ProductCategory[]
+  brands Brand[]
+  units Unit[]
+  taxes Tax[]
+  products Product[]
+  attributes Attribute[]
 
   status    RecordStatus @default(ACTIVE)
   deletedAt DateTime?    @map("deleted_at")
@@ -295,4 +302,308 @@ model Store {
   @@index([status], map: "idx_store_status")
 
   @@map("stores")
+}
+
+//////////////////////////////////////////////////////
+// PRODUCT CATEGORY
+//////////////////////////////////////////////////////
+
+model ProductCategory {
+  id             String          @id @default(uuid())
+  organizationId String          @map("organization_id")
+  parentId       String?         @map("parent_id")
+  code           String
+  name           String
+  description    String?
+  sortOrder      Int             @default(0) @map("sort_order")
+  status         RecordStatus    @default(ACTIVE)
+  deletedAt      DateTime?       @map("deleted_at")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  parent         ProductCategory? @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children       ProductCategory[] @relation("CategoryTree")
+  products       Product[]
+
+  @@unique([organizationId, code], map: "uk_category_org_code")
+  @@index([organizationId])
+  @@index([parentId])
+  @@map("product_categories")
+}
+
+//////////////////////////////////////////////////////
+// BRAND
+//////////////////////////////////////////////////////
+
+model Brand {
+  id             String       @id @default(uuid())
+  organizationId String       @map("organization_id")
+  code           String
+  name           String
+  logo           String?
+  website        String?
+  status         RecordStatus @default(ACTIVE)
+  deletedAt      DateTime?    @map("deleted_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  products       Product[]
+
+  @@unique([organizationId, code], map: "uk_brand_org_code")
+  @@index([organizationId])
+  @@map("brands")
+}
+
+//////////////////////////////////////////////////////
+// UNIT
+//////////////////////////////////////////////////////
+
+model Unit {
+  id             String       @id @default(uuid())
+  organizationId String       @map("organization_id")
+  code           String
+  name           String
+  symbol         String
+  status         RecordStatus @default(ACTIVE)
+  deletedAt      DateTime?    @map("deleted_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  products       Product[]
+
+  @@unique([organizationId, code], map: "uk_unit_org_code")
+  @@index([organizationId])
+  @@map("units")
+}
+
+//////////////////////////////////////////////////////
+// TAX
+//////////////////////////////////////////////////////
+
+model Tax {
+  id             String       @id @default(uuid())
+  organizationId String       @map("organization_id")
+  code           String
+  name           String
+  rate           Decimal      @db.Decimal(5, 2)
+  status         RecordStatus @default(ACTIVE)
+  deletedAt      DateTime?    @map("deleted_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  products       Product[]
+
+  @@unique([organizationId, code], map: "uk_tax_org_code")
+  @@index([organizationId])
+  @@map("taxes")
+}
+
+//////////////////////////////////////////////////////
+// PRODUCT
+//////////////////////////////////////////////////////
+
+model Product {
+  id              String          @id @default(uuid())
+  organizationId  String          @map("organization_id")
+  categoryId      String          @map("category_id")
+  brandId         String?         @map("brand_id")
+  unitId          String          @map("unit_id")
+  taxId           String?         @map("tax_id")
+  code            String
+  sku             String?
+  name            String
+  shortName       String?         @map("short_name")
+  description     String?
+  status          ProductStatus   @default(DRAFT)
+  isActive        Boolean         @default(true) @map("is_active")
+  isSerialized    Boolean         @default(false) @map("is_serialized")
+  allowBackorder  Boolean         @default(false) @map("allow_backorder")
+  weight          Decimal?        @db.Decimal(10, 4)
+  width           Decimal?        @db.Decimal(10, 4)
+  height          Decimal?        @db.Decimal(10, 4)
+  length          Decimal?        @db.Decimal(10, 4)
+  slug            String
+  metaTitle       String?         @map("meta_title")
+  metaKeyword     String?         @map("meta_keyword")
+  metaDescription String?         @map("meta_description")
+  deletedAt       DateTime?       @map("deleted_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  organization    Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  category        ProductCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  brand           Brand?          @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  unit            Unit            @relation(fields: [unitId], references: [id], onDelete: Restrict)
+  tax             Tax?            @relation(fields: [taxId], references: [id], onDelete: SetNull)
+  variants        ProductVariant[]
+  images          ProductImage[]
+  marketplaceMappings ProductMarketplace[]
+
+  @@unique([organizationId, code], map: "uk_product_org_code")
+  @@unique([organizationId, slug], map: "uk_product_org_slug")
+  @@index([organizationId])
+  @@index([categoryId])
+  @@index([brandId])
+  @@index([unitId])
+  @@index([taxId])
+  @@map("products")
+}
+
+//////////////////////////////////////////////////////
+// PRODUCT VARIANT
+//////////////////////////////////////////////////////
+
+model ProductVariant {
+  id         String          @id @default(uuid())
+  productId  String          @map("product_id")
+  sku        String
+  name       String
+  weight     Decimal?        @db.Decimal(10, 4)
+  status     RecordStatus    @default(ACTIVE)
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
+
+  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  barcodes   ProductBarcode[]
+  prices     ProductPrice[]
+  attributeValues ProductVariantAttributeValue[]
+  marketplaceMappings ProductMarketplace[]
+
+  @@unique([productId, sku], map: "uk_variant_product_sku")
+  @@index([productId])
+  @@map("product_variants")
+}
+
+//////////////////////////////////////////////////////
+// PRODUCT BARCODE
+//////////////////////////////////////////////////////
+
+model ProductBarcode {
+  id         String         @id @default(uuid())
+  variantId  String         @map("variant_id")
+  barcode    String
+  isDefault  Boolean        @default(false) @map("is_default")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  variant    ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, barcode], map: "uk_barcode_variant_code")
+  @@index([variantId])
+  @@map("product_barcodes")
+}
+
+//////////////////////////////////////////////////////
+// PRODUCT PRICE
+//////////////////////////////////////////////////////
+
+model ProductPrice {
+  id         String         @id @default(uuid())
+  variantId  String         @map("variant_id")
+  priceType  String         @map("price_type") // Retail, Wholesale, Member, VIP, Marketplace
+  currency   String         @default("THB")
+  price      Decimal        @db.Decimal(12, 2)
+  startDate  DateTime?      @map("start_date")
+  endDate    DateTime?      @map("end_date")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  updatedAt  DateTime       @updatedAt @map("updated_at")
+
+  variant    ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([variantId])
+  @@map("product_prices")
+}
+
+//////////////////////////////////////////////////////
+// PRODUCT IMAGE
+//////////////////////////////////////////////////////
+
+model ProductImage {
+  id         String       @id @default(uuid())
+  productId  String       @map("product_id")
+  url        String
+  sortOrder  Int          @default(0) @map("sort_order")
+  altText    String?      @map("alt_text")
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+//////////////////////////////////////////////////////
+// ATTRIBUTES
+//////////////////////////////////////////////////////
+
+model Attribute {
+  id             String           @id @default(uuid())
+  organizationId String           @map("organization_id")
+  name           String
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  values         AttributeValue[]
+
+  @@unique([organizationId, name], map: "uk_attribute_org_name")
+  @@index([organizationId])
+  @@map("attributes")
+}
+
+model AttributeValue {
+  id          String           @id @default(uuid())
+  attributeId String           @map("attribute_id")
+  value       String
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  attribute   Attribute        @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  variantRelations ProductVariantAttributeValue[]
+
+  @@unique([attributeId, value], map: "uk_attr_value_name")
+  @@index([attributeId])
+  @@map("attribute_values")
+}
+
+model ProductVariantAttributeValue {
+  id               String         @id @default(uuid())
+  variantId        String         @map("variant_id")
+  attributeValueId String         @map("attribute_value_id")
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  variant          ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  attributeValue   AttributeValue @relation(fields: [attributeValueId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, attributeValueId], map: "uk_variant_attr_value")
+  @@index([variantId])
+  @@index([attributeValueId])
+  @@map("product_variant_attribute_values")
+}
+
+//////////////////////////////////////////////////////
+// PRODUCT MARKETPLACE
+//////////////////////////////////////////////////////
+
+model ProductMarketplace {
+  id                String          @id @default(uuid())
+  productId         String?         @map("product_id")
+  variantId         String?         @map("variant_id")
+  marketplace       Marketplace
+  externalProductId String          @map("external_product_id")
+  externalVariantId String?         @map("external_variant_id")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  product           Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant           ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([variantId])
+  @@map("product_marketplaces")
 }
