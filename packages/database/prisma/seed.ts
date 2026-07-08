@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -406,12 +407,174 @@ async function main() {
     ]
   );
 
+  // Seeding Permissions
+  const permissionsList = [
+    { code: "product.read", module: "Product", name: "Read Product", description: "Allow viewing products" },
+    { code: "product.create", module: "Product", name: "Create Product", description: "Allow creating products" },
+    { code: "product.update", module: "Product", name: "Update Product", description: "Allow updating products" },
+    { code: "product.delete", module: "Product", name: "Delete Product", description: "Allow deleting products" },
+    { code: "user.manage", module: "User", name: "Manage Users", description: "Allow full user management" },
+  ];
+
+  const dbPermissions = [];
+  for (const perm of permissionsList) {
+    const dbPerm = await prisma.permission.upsert({
+      where: { code: perm.code },
+      update: {
+        module: perm.module,
+        name: perm.name,
+        description: perm.description,
+      },
+      create: perm,
+    });
+    dbPermissions.push(dbPerm);
+  }
+
+  // Seeding Roles
+  const adminRole = await prisma.role.upsert({
+    where: {
+      organizationId_code: {
+        organizationId: organization.id,
+        code: "ADMIN",
+      },
+    },
+    update: {
+      name: "Admin",
+      description: "System Administrator",
+      isSystem: true,
+    },
+    create: {
+      organizationId: organization.id,
+      code: "ADMIN",
+      name: "Admin",
+      description: "System Administrator",
+      isSystem: true,
+    },
+  });
+
+  const cashierRole = await prisma.role.upsert({
+    where: {
+      organizationId_code: {
+        organizationId: organization.id,
+        code: "CASHIER",
+      },
+    },
+    update: {
+      name: "Cashier",
+      description: "Cashier storefront",
+      isSystem: false,
+    },
+    create: {
+      organizationId: organization.id,
+      code: "CASHIER",
+      name: "Cashier",
+      description: "Cashier storefront",
+      isSystem: false,
+    },
+  });
+
+  // Role Permissions mapping for ADMIN (give all permissions)
+  for (const perm of dbPermissions) {
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: adminRole.id,
+          permissionId: perm.id,
+        },
+      },
+      update: {},
+      create: {
+        roleId: adminRole.id,
+        permissionId: perm.id,
+      },
+    });
+  }
+
+  // Role Permissions mapping for CASHIER (give product.read only)
+  const productReadPerm = dbPermissions.find(p => p.code === "product.read");
+  if (productReadPerm) {
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: cashierRole.id,
+          permissionId: productReadPerm.id,
+        },
+      },
+      update: {},
+      create: {
+        roleId: cashierRole.id,
+        permissionId: productReadPerm.id,
+      },
+    });
+  }
+
+  // User: Admin
+  const passwordHash = bcrypt.hashSync("password123", 10);
+  const adminUser = await prisma.user.upsert({
+    where: {
+      organizationId_username: {
+        organizationId: organization.id,
+        username: "admin",
+      },
+    },
+    update: {
+      email: "admin@example.com",
+      passwordHash,
+      displayName: "Administrator",
+      defaultStoreId: store.id,
+      status: "ACTIVE",
+    },
+    create: {
+      organizationId: organization.id,
+      defaultStoreId: store.id,
+      username: "admin",
+      email: "admin@example.com",
+      passwordHash,
+      displayName: "Administrator",
+      status: "ACTIVE",
+    },
+  });
+
+  // Link Admin User to Admin Role
+  await prisma.userRole.upsert({
+    where: {
+      userId_roleId: {
+        userId: adminUser.id,
+        roleId: adminRole.id,
+      },
+    },
+    update: {},
+    create: {
+      userId: adminUser.id,
+      roleId: adminRole.id,
+    },
+  });
+
+  // Link Admin User to Store (UserStore)
+  await prisma.userStore.upsert({
+    where: {
+      userId_storeId: {
+        userId: adminUser.id,
+        storeId: store.id,
+      },
+    },
+    update: {
+      isDefault: true,
+    },
+    create: {
+      userId: adminUser.id,
+      storeId: store.id,
+      isDefault: true,
+    },
+  });
+
   console.log({
     country: thailand.code,
     organization: organization.code,
     store: store.code,
     category: mobilePhones.name,
     product: iphone17.name,
+    adminUser: adminUser.username,
   });
 }
 

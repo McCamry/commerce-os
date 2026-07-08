@@ -8,6 +8,9 @@ import { BrandsModule } from './modules/brands/brands.module';
 import { UnitsModule } from './modules/units/units.module';
 import { TaxesModule } from './modules/taxes/taxes.module';
 import { ProductsModule } from './modules/products/products.module';
+import { UsersModule } from './modules/users/users.module';
+import { RolesPermissionsModule } from './modules/roles-permissions/roles-permissions.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { ProductsModule } from './modules/products/products.module';
     UnitsModule,
     TaxesModule,
     ProductsModule,
+    UsersModule,
+    RolesPermissionsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
