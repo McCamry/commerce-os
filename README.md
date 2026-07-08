@@ -1,159 +1,85 @@
-# Turborepo starter
+# CommerceOS
 
-This Turborepo starter is maintained by the Turborepo core team.
+CommerceOS is a monorepo for building a marketplace-independent commerce back office. The system is designed around owned product, store, and inventory data, with Shopee, Lazada, TikTok, website, and POS integrations treated as adapters around the core model.
 
-## Using this example
+## Stack
 
-Run the following command:
+- Monorepo: pnpm workspaces + Turborepo
+- Web: Next.js, React, TypeScript
+- API: NestJS, Prisma Client
+- Database: PostgreSQL, Prisma Migrate
+- Tooling: ESLint, Prettier, TypeScript
 
-```sh
-npx create-turbo@latest
-```
+## Workspace
 
-## What's inside?
+- `apps/api`: NestJS API. Currently exposes a database health check at `GET /`.
+- `apps/web`: Next.js web app. Still mostly the starter UI.
+- `apps/docs`: Next.js docs app from the Turborepo starter.
+- `packages/database`: Prisma schema, migrations, and seed data.
+- `packages/core`: Early shared TypeScript domain types.
+- `packages/ui`: Shared React UI package from the starter.
+- `docker`: Local PostgreSQL compose setup.
+- `docs`: Architecture notes, roadmap, and API sketches.
 
-This Turborepo includes the following packages/apps:
+## Getting Started
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Install dependencies:
 
 ```sh
-cd my-turborepo
-turbo build
+pnpm install
 ```
 
-Without global `turbo`, use your package manager:
+Start PostgreSQL:
 
 ```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+docker compose -f docker/docker-compose.yml up -d
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Generate Prisma Client:
 
 ```sh
-turbo build --filter=docs
+pnpm db:generate
 ```
 
-Without global `turbo`:
+Apply migrations:
 
 ```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
+pnpm db:migrate
 ```
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+Seed starter data:
 
 ```sh
-cd my-turborepo
-turbo dev
+pnpm db:seed
 ```
 
-Without global `turbo`, use your package manager:
+Run the workspace:
 
 ```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
+pnpm dev
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## Common Commands
 
 ```sh
-turbo dev --filter=web
+pnpm build
+pnpm lint
+pnpm check-types
+pnpm db:studio
 ```
 
-Without global `turbo`:
+## Current Domain Foundation
 
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+The Prisma schema currently focuses on master data:
 
-### Remote Caching
+- Countries, provinces, districts, and subdistricts
+- Organizations
+- Stores
+- Record status and marketplace enums
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+The roadmap then moves through authentication, products, categories, inventory, orders, customers, dashboarding, and marketplace connectors.
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## Notes
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+- The database schema is ahead of some app code. API modules for products, categories, inventory, orders, and customers are not implemented yet.
+- When changing `packages/database/prisma/schema.prisma`, create and commit the matching Prisma migration before relying on the schema in seed data or API code.

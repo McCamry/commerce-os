@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//////////////////////////////////////////////////////
+// ENUM
+//////////////////////////////////////////////////////
+
 enum Marketplace {
   SHOPEE
   LAZADA
@@ -30,24 +34,43 @@ enum RecordStatus {
   INACTIVE
 }
 
+//////////////////////////////////////////////////////
+// COUNTRY
+//////////////////////////////////////////////////////
+
 model Country {
-  id        String   @id @default(uuid())
-  code      String   @unique(map: "uk_country_code")
-  nameTh    String   @map("name_th")
-  nameEn    String   @map("name_en")
+  id   String @id @default(uuid())
+
+  code   String @unique(map: "uk_country_code")
+  nameTh String @map("name_th")
+  nameEn String @map("name_en")
+  phoneCode String? @map("phone_code")
+  currencyCode String? @map("currency_code")
+
+  status    RecordStatus @default(ACTIVE)
+  deletedAt DateTime?    @map("deleted_at")
 
   provinces Province[]
+
+  organizations Organization[]
+  stores        Store[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([code], map: "idx_country_code")
   @@index([nameTh], map: "idx_country_name_th")
+  @@index([status], map: "idx_country_status")
+
   @@map("countries")
 }
 
+//////////////////////////////////////////////////////
+// PROVINCE
+//////////////////////////////////////////////////////
+
 model Province {
-  id        String @id @default(uuid())
+  id String @id @default(uuid())
 
   countryId String @map("country_id")
 
@@ -57,7 +80,13 @@ model Province {
   nameTh String @map("name_th")
   nameEn String @map("name_en")
 
+  status    RecordStatus @default(ACTIVE)
+  deletedAt DateTime?    @map("deleted_at")
+
   districts District[]
+
+  organizations Organization[]
+  stores        Store[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -67,9 +96,14 @@ model Province {
   @@index([countryId], map: "idx_province_country")
   @@index([code], map: "idx_province_code")
   @@index([nameTh], map: "idx_province_name_th")
+  @@index([status], map: "idx_province_status")
 
   @@map("provinces")
 }
+
+//////////////////////////////////////////////////////
+// DISTRICT
+//////////////////////////////////////////////////////
 
 model District {
   id String @id @default(uuid())
@@ -82,7 +116,13 @@ model District {
   nameTh String @map("name_th")
   nameEn String @map("name_en")
 
+  status    RecordStatus @default(ACTIVE)
+  deletedAt DateTime?    @map("deleted_at")
+
   subdistricts Subdistrict[]
+
+  organizations Organization[]
+  stores        Store[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -92,9 +132,14 @@ model District {
   @@index([provinceId], map: "idx_district_province")
   @@index([code], map: "idx_district_code")
   @@index([nameTh], map: "idx_district_name_th")
+  @@index([status], map: "idx_district_status")
 
   @@map("districts")
 }
+
+//////////////////////////////////////////////////////
+// SUBDISTRICT
+//////////////////////////////////////////////////////
 
 model Subdistrict {
   id String @id @default(uuid())
@@ -110,6 +155,12 @@ model Subdistrict {
 
   postalCode String @map("postal_code")
 
+  status    RecordStatus @default(ACTIVE)
+  deletedAt DateTime?    @map("deleted_at")
+
+  organizations Organization[]
+  stores        Store[]
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -118,6 +169,130 @@ model Subdistrict {
   @@index([districtId], map: "idx_subdistrict_district")
   @@index([code], map: "idx_subdistrict_code")
   @@index([nameTh], map: "idx_subdistrict_name_th")
+  @@index([status], map: "idx_subdistrict_status")
 
   @@map("subdistricts")
+}
+
+//////////////////////////////////////////////////////
+// ORGANIZATION
+//////////////////////////////////////////////////////
+
+model Organization {
+  id String @id @default(uuid())
+
+  code String @unique
+  name String
+  slug String @unique
+
+  taxId String? @map("tax_id")
+
+  contactPerson String? @map("contact_person")
+  phone1         String? @map("phone_1")
+  phone2         String? @map("phone_2")
+  email          String?
+
+  address1 String?
+  address2 String?
+  remark   String?
+
+  countryId     String  @map("country_id")
+  provinceId    String? @map("province_id")
+  districtId    String? @map("district_id")
+  subdistrictId String? @map("subdistrict_id")
+
+  country Country @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  province Province? @relation(fields: [provinceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  district District? @relation(fields: [districtId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  subdistrict Subdistrict? @relation(fields: [subdistrictId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  stores Store[]
+
+  status    RecordStatus @default(ACTIVE)
+  deletedAt DateTime?    @map("deleted_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([code], map: "idx_org_code")
+  @@index([slug], map: "idx_org_slug")
+  @@index([name], map: "idx_org_name")
+
+  @@index([countryId], map: "idx_org_country")
+  @@index([provinceId], map: "idx_org_province")
+  @@index([districtId], map: "idx_org_district")
+  @@index([subdistrictId], map: "idx_org_subdistrict")
+
+  @@index([status], map: "idx_org_status")
+
+  @@map("organizations")
+}
+
+//////////////////////////////////////////////////////
+// STORE
+//////////////////////////////////////////////////////
+
+model Store {
+  id String @id @default(uuid())
+
+  organizationId String @map("organization_id")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  code String
+  name String
+  slug String
+
+  taxId String? @map("tax_id")
+
+  contactPerson String? @map("contact_person")
+  phone1         String? @map("phone_1")
+  phone2         String? @map("phone_2")
+  email          String?
+
+  address1 String?
+  address2 String?
+  remark   String?
+
+  countryId     String  @map("country_id")
+  provinceId    String? @map("province_id")
+  districtId    String? @map("district_id")
+  subdistrictId String? @map("subdistrict_id")
+
+  country Country @relation(fields: [countryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  province Province? @relation(fields: [provinceId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  district District? @relation(fields: [districtId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  subdistrict Subdistrict? @relation(fields: [subdistrictId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  timezone String @default("Asia/Bangkok")
+  currency String @default("THB")
+
+  status    RecordStatus @default(ACTIVE)
+  deletedAt DateTime?    @map("deleted_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([organizationId, code], map: "uk_store_org_code")
+  @@unique([organizationId, slug], map: "uk_store_org_slug")
+
+  @@index([organizationId], map: "idx_store_org")
+  @@index([code], map: "idx_store_code")
+  @@index([slug], map: "idx_store_slug")
+  @@index([name], map: "idx_store_name")
+
+  @@index([countryId], map: "idx_store_country")
+  @@index([provinceId], map: "idx_store_province")
+  @@index([districtId], map: "idx_store_district")
+  @@index([subdistrictId], map: "idx_store_subdistrict")
+
+  @@index([status], map: "idx_store_status")
+
+  @@map("stores")
 }
