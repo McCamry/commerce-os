@@ -255,3 +255,181 @@ Manage product catalog details, pricing, and associations.
     ```
 *   **Error Responses**:
     *   `404 Not Found`: Product not found.
+
+---
+
+## Authentication & Authorization API
+
+### Auth Endpoints
+
+#### 1. Login User
+*   **Method**: `POST`
+*   **Path**: `/auth/login`
+*   **Body**:
+    ```json
+    {
+      "username": "admin",
+      "password": "password123",
+      "organizationCode": "DEMO"
+    }
+    ```
+*   **Response (200 OK)**:
+    ```json
+    {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "7c489c9e-5d1e-4cb8-86c2-005d0cf19230",
+      "user": {
+        "id": "u1a63cde-f1c5-4a58-86d1-002d0cf19230",
+        "username": "admin",
+        "displayName": "Administrator"
+      }
+    }
+    ```
+
+#### 2. Refresh Token
+*   **Method**: `POST`
+*   **Path**: `/auth/refresh`
+*   **Body**:
+    ```json
+    {
+      "refreshToken": "7c489c9e-5d1e-4cb8-86c2-005d0cf19230"
+    }
+    ```
+*   **Response (200 OK)**:
+    ```json
+    {
+      "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refreshToken": "new-refresh-token-uuid..."
+    }
+    ```
+
+#### 3. Logout User
+*   **Method**: `POST`
+*   **Path**: `/auth/logout`
+*   **Body**:
+    ```json
+    {
+      "refreshToken": "7c489c9e-5d1e-4cb8-86c2-005d0cf19230"
+    }
+    ```
+*   **Response (200 OK)**:
+    ```json
+    {
+      "success": true
+    }
+    ```
+
+#### 4. Get Current Profile
+*   **Method**: `GET`
+*   **Path**: `/auth/me`
+*   **Headers**: `Authorization: Bearer <accessToken>`
+*   **Response (200 OK)**:
+    ```json
+    {
+      "id": "u1a63cde-f1c5-4a58-86d1-002d0cf19230",
+      "organizationId": "504c5520-22c6-4e50-9d35-f09c62985ce4",
+      "defaultStoreId": "s1a63cde-f1c5-4a58-86d1-002d0cf19230",
+      "username": "admin",
+      "email": "admin@example.com",
+      "displayName": "Administrator",
+      "roles": ["Admin"],
+      "permissions": ["product.read", "product.create", "product.update", "product.delete", "user.manage"],
+      "accessibleStores": [
+        {
+          "storeId": "s1a63cde-f1c5-4a58-86d1-002d0cf19230",
+          "name": "Demo Main Store",
+          "isDefault": true
+        }
+      ]
+    }
+    ```
+
+---
+
+### User Management Endpoints (`/users`)
+
+#### 1. List Users
+*   **Method**: `GET`
+*   **Path**: `/users`
+*   **Headers**: `Authorization: Bearer <accessToken>`
+*   **Query Parameters**:
+    *   `organizationId` (Required): Filter by organization.
+*   **Response (200 OK)**: List of user objects (excluding password hashes) with their assigned roles and stores.
+
+#### 2. Create User
+*   **Method**: `POST`
+*   **Path**: `/users`
+*   **Headers**: `Authorization: Bearer <accessToken>`
+*   **Body**:
+    ```json
+    {
+      "organizationId": "504c5520-22c6-4e50-9d35-f09c62985ce4",
+      "username": "staff1",
+      "email": "staff1@example.com",
+      "password": "password123",
+      "displayName": "Staff Member",
+      "roleIds": ["role-uuid-1"],
+      "storeIds": ["store-uuid-1"],
+      "defaultStoreId": "store-uuid-1"
+    }
+    ```
+*   **Response (201 Created)**: Returns the created user object.
+
+#### 3. Update User
+*   **Method**: `PATCH`
+*   **Path**: `/users/:id`
+*   **Headers**: `Authorization: Bearer <accessToken>`
+*   **Body**: Fields to update, including `roleIds` or `storeIds`.
+*   **Response (200 OK)**: Returns the updated user.
+
+#### 4. Delete User (Soft Delete)
+*   **Method**: `DELETE`
+*   **Path**: `/users/:id`
+*   **Headers**: `Authorization: Bearer <accessToken>`
+*   **Response (200 OK)**: Soft deleted status.
+
+---
+
+### Role & Permission Management Endpoints
+
+#### 1. List Permissions (Global)
+*   **Method**: `GET`
+*   **Path**: `/permissions`
+*   **Headers**: `Authorization: Bearer <accessToken>`
+*   **Response (200 OK)**: Array of global permissions grouped by module.
+
+#### 2. List Roles
+*   **Method**: `GET`
+*   **Path**: `/roles`
+*   **Headers**: `Authorization: Bearer <accessToken>`
+*   **Query Parameters**:
+    *   `organizationId` (Required): Filter by organization.
+*   **Response (200 OK)**: Array of roles with their nested permission links.
+
+#### 3. Create Role
+*   **Method**: `POST`
+*   **Path**: `/roles`
+*   **Headers**: `Authorization: Bearer <accessToken>`
+*   **Body**:
+    ```json
+    {
+      "organizationId": "504c5520-22c6-4e50-9d35-f09c62985ce4",
+      "code": "CASHIER",
+      "name": "Cashier Storefront",
+      "description": "Cashier storefront operators",
+      "permissionIds": ["perm-uuid-1", "perm-uuid-2"]
+    }
+    ```
+*   **Response (201 Created)**: Created role object.
+
+#### 4. Assign Permissions to Role
+*   **Method**: `PATCH`
+*   **Path**: `/roles/:id/permissions`
+*   **Headers**: `Authorization: Bearer <accessToken>`
+*   **Body**:
+    ```json
+    {
+      "permissionIds": ["perm-uuid-1", "perm-uuid-2", "perm-uuid-3"]
+    }
+    ```
+*   **Response (200 OK)**: Updated role with list of assigned permissions.
