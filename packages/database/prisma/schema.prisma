@@ -219,6 +219,7 @@ model Organization {
   attributes Attribute[]
   users User[]
   roles Role[]
+  warehouses Warehouse[]
 
   status    RecordStatus @default(ACTIVE)
   deletedAt DateTime?    @map("deleted_at")
@@ -281,6 +282,7 @@ model Store {
 
   defaultUsers User[]      @relation("DefaultStore")
   userStores   UserStore[]
+  warehouses   Warehouse[]
 
   timezone String @default("Asia/Bangkok")
   currency String @default("THB")
@@ -477,6 +479,11 @@ model ProductVariant {
   prices     ProductPrice[]
   attributeValues ProductVariantAttributeValue[]
   marketplaceMappings ProductMarketplace[]
+  inventories         Inventory[]
+  transactions        InventoryTransaction[]
+  adjustmentItems     StockAdjustmentItem[]
+  transferItems       StockTransferItem[]
+  snapshots           InventorySnapshot[]
 
   @@unique([productId, sku], map: "uk_variant_product_sku")
   @@index([productId])
@@ -643,6 +650,9 @@ model User {
   sessions       UserSession[]
   loginHistories LoginHistory[]
   auditLogs      AuditLog[]
+  adjustmentsCreated   StockAdjustment[]
+  transfersCreated     StockTransfer[]
+  transactionsCreated  InventoryTransaction[]
 
   @@unique([organizationId, username], map: "uk_user_org_username")
   @@unique([organizationId, email], map: "uk_user_org_email")
@@ -828,4 +838,284 @@ model AuditLog {
 
   @@index([userId])
   @@map("audit_logs")
+}
+
+//////////////////////////////////////////////////////
+// WAREHOUSE
+//////////////////////////////////////////////////////
+
+model Warehouse {
+  id             String         @id @default(uuid())
+  organizationId String         @map("organization_id")
+  storeId        String         @map("store_id")
+  code           String
+  name           String
+  description    String?
+  isDefault      Boolean        @default(false) @map("is_default")
+  status         RecordStatus   @default(ACTIVE)
+  deletedAt      DateTime?      @map("deleted_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  store          Store          @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  locations      Location[]
+  inventories    Inventory[]
+  fromTransfers  StockTransfer[] @relation("FromWarehouse")
+  toTransfers    StockTransfer[] @relation("ToWarehouse")
+  adjustments    StockAdjustment[]
+  snapshots      InventorySnapshot[]
+  transactions   InventoryTransaction[]
+
+  @@unique([organizationId, code], map: "uk_warehouse_org_code")
+  @@index([organizationId])
+  @@index([storeId])
+  @@map("warehouses")
+}
+
+//////////////////////////////////////////////////////
+// LOCATION
+//////////////////////////////////////////////////////
+
+model Location {
+  id                String         @id @default(uuid())
+  warehouseId       String         @map("warehouse_id")
+  parentId          String?        @map("parent_id")
+  code              String
+  name              String
+  allowPicking      Boolean        @default(true) @map("allow_picking")
+  allowReceiving     Boolean        @default(true) @map("allow_receiving")
+  maxCapacity       Decimal?       @db.Decimal(10, 4) @map("max_capacity")
+  pickingRouteOrder Int            @default(0) @map("picking_route_order")
+  status            RecordStatus   @default(ACTIVE)
+  deletedAt         DateTime?      @map("deleted_at")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  warehouse         Warehouse      @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  parent            Location?      @relation("LocationTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children          Location[]     @relation("LocationTree")
+  inventories       Inventory[]
+  transactions      InventoryTransaction[]
+  adjustmentItems   StockAdjustmentItem[]
+  transferFroms     StockTransferItem[]   @relation("TransferFromLocation")
+  transferTos       StockTransferItem[]   @relation("TransferToLocation")
+
+  @@unique([warehouseId, code], map: "uk_location_wh_code")
+  @@index([warehouseId])
+  @@index([parentId])
+  @@map("locations")
+}
+
+//////////////////////////////////////////////////////
+// INVENTORY
+//////////////////////////////////////////////////////
+
+model Inventory {
+  id                String            @id @default(uuid())
+  variantId         String            @map("variant_id")
+  warehouseId       String            @map("warehouse_id")
+  locationId        String            @map("location_id")
+  quantityOnHand    Int               @default(0) @map("quantity_on_hand")
+  quantityReserved  Int               @default(0) @map("quantity_reserved")
+  quantityAvailable Int               @default(0) @map("quantity_available")
+  quantityIncoming  Int               @default(0) @map("quantity_incoming")
+  quantityDamaged   Int               @default(0) @map("quantity_damaged")
+  quantityBlocked   Int               @default(0) @map("quantity_blocked")
+  status            String            @default("Available")
+  createdAt         DateTime          @default(now()) @map("created_at")
+  updatedAt         DateTime          @updatedAt @map("updated_at")
+
+  variant           ProductVariant    @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  warehouse         Warehouse         @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  location          Location          @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  lots              InventoryLot[]
+  serials           InventorySerial[]
+
+  @@unique([variantId, warehouseId, locationId], map: "uk_inventory_variant_wh_loc")
+  @@index([variantId])
+  @@index([warehouseId])
+  @@index([locationId])
+  @@map("inventories")
+}
+
+//////////////////////////////////////////////////////
+// INVENTORY LOT
+//////////////////////////////////////////////////////
+
+model InventoryLot {
+  id              String       @id @default(uuid())
+  inventoryId     String       @map("inventory_id")
+  lotNumber       String       @map("lot_number")
+  manufactureDate DateTime?    @map("manufacture_date")
+  expireDate      DateTime?    @map("expire_date")
+  quantity        Int          @default(0)
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  inventory       Inventory    @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@index([inventoryId])
+  @@map("inventory_lots")
+}
+
+//////////////////////////////////////////////////////
+// INVENTORY SERIAL
+//////////////////////////////////////////////////////
+
+model InventorySerial {
+  id           String       @id @default(uuid())
+  inventoryId  String       @map("inventory_id")
+  serialNumber String       @map("serial_number")
+  status       String       @default("AVAILABLE")
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  inventory    Inventory    @relation(fields: [inventoryId], references: [id], onDelete: Cascade)
+
+  @@unique([inventoryId, serialNumber], map: "uk_inventory_serial")
+  @@index([inventoryId])
+  @@map("inventory_serials")
+}
+
+//////////////////////////////////////////////////////
+// INVENTORY TRANSACTION
+//////////////////////////////////////////////////////
+
+model InventoryTransaction {
+  id            String          @id @default(uuid())
+  variantId     String          @map("variant_id")
+  warehouseId   String          @map("warehouse_id")
+  locationId    String          @map("location_id")
+  type          String
+  quantity      Int
+  referenceType String?         @map("reference_type")
+  referenceId   String?         @map("reference_id")
+  createdBy     String?         @map("created_by")
+  createdAt     DateTime        @default(now()) @map("created_at")
+
+  variant       ProductVariant  @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  warehouse     Warehouse       @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  location      Location        @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  creator       User?           @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+
+  @@index([variantId])
+  @@index([warehouseId])
+  @@index([locationId])
+  @@index([createdBy])
+  @@map("inventory_transactions")
+}
+
+//////////////////////////////////////////////////////
+// STOCK ADJUSTMENT
+//////////////////////////////////////////////////////
+
+model StockAdjustment {
+  id             String                @id @default(uuid())
+  warehouseId    String                @map("warehouse_id")
+  reason         String?
+  status         String                @default("DRAFT")
+  createdBy      String?               @map("created_by")
+  createdAt      DateTime              @default(now()) @map("created_at")
+  updatedAt      DateTime              @updatedAt @map("updated_at")
+
+  warehouse      Warehouse             @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  creator        User?                 @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  items          StockAdjustmentItem[]
+
+  @@index([warehouseId])
+  @@index([createdBy])
+  @@map("stock_adjustments")
+}
+
+//////////////////////////////////////////////////////
+// STOCK ADJUSTMENT ITEM
+//////////////////////////////////////////////////////
+
+model StockAdjustmentItem {
+  id           String          @id @default(uuid())
+  adjustmentId String          @map("adjustment_id")
+  variantId    String          @map("variant_id")
+  locationId   String          @map("location_id")
+  systemQty    Int             @map("system_qty")
+  countQty     Int             @map("count_qty")
+  difference   Int
+
+  adjustment   StockAdjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+  variant      ProductVariant  @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  location     Location        @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@index([adjustmentId])
+  @@index([variantId])
+  @@index([locationId])
+  @@map("stock_adjustment_items")
+}
+
+//////////////////////////////////////////////////////
+// STOCK TRANSFER
+//////////////////////////////////////////////////////
+
+model StockTransfer {
+  id              String              @id @default(uuid())
+  fromWarehouseId String              @map("from_warehouse_id")
+  toWarehouseId   String              @map("to_warehouse_id")
+  status          String              @default("DRAFT")
+  transferDate    DateTime            @default(now()) @map("transfer_date")
+  createdBy       String?             @map("created_by")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  fromWarehouse   Warehouse           @relation("FromWarehouse", fields: [fromWarehouseId], references: [id], onDelete: Restrict)
+  toWarehouse     Warehouse           @relation("ToWarehouse", fields: [toWarehouseId], references: [id], onDelete: Restrict)
+  creator         User?               @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  items           StockTransferItem[]
+
+  @@index([fromWarehouseId])
+  @@index([toWarehouseId])
+  @@index([createdBy])
+  @@map("stock_transfers")
+}
+
+//////////////////////////////////////////////////////
+// STOCK TRANSFER ITEM
+//////////////////////////////////////////////////////
+
+model StockTransferItem {
+  id              String         @id @default(uuid())
+  transferId      String         @map("transfer_id")
+  variantId       String         @map("variant_id")
+  fromLocationId  String         @map("from_location_id")
+  toLocationId    String         @map("to_location_id")
+  quantity        Int
+
+  transfer        StockTransfer  @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  variant         ProductVariant @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  fromLocation    Location       @relation("TransferFromLocation", fields: [fromLocationId], references: [id], onDelete: Restrict)
+  toLocation      Location       @relation("TransferToLocation", fields: [toLocationId], references: [id], onDelete: Restrict)
+
+  @@index([transferId])
+  @@index([variantId])
+  @@index([fromLocationId])
+  @@index([toLocationId])
+  @@map("stock_transfer_items")
+}
+
+//////////////////////////////////////////////////////
+// INVENTORY SNAPSHOT
+//////////////////////////////////////////////////////
+
+model InventorySnapshot {
+  id           String         @id @default(uuid())
+  snapshotDate DateTime       @map("snapshot_date")
+  warehouseId  String         @map("warehouse_id")
+  variantId    String         @map("variant_id")
+  quantity     Int
+
+  warehouse    Warehouse      @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  variant      ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([snapshotDate, warehouseId, variantId], map: "uk_inventory_snapshot")
+  @@index([warehouseId])
+  @@index([variantId])
+  @@map("inventory_snapshots")
 }

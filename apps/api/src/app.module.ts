@@ -11,6 +11,11 @@ import { ProductsModule } from './modules/products/products.module';
 import { UsersModule } from './modules/users/users.module';
 import { RolesPermissionsModule } from './modules/roles-permissions/roles-permissions.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { WarehousesModule } from './modules/warehouses/warehouses.module';
+import { LocationsModule } from './modules/locations/locations.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { StockTransfersModule } from './modules/stock-transfers/stock-transfers.module';
+import { StockAdjustmentsModule } from './modules/stock-adjustments/stock-adjustments.module';
 
 @Module({
   imports: [
@@ -24,6 +29,11 @@ import { AuthModule } from './modules/auth/auth.module';
     UsersModule,
     RolesPermissionsModule,
     AuthModule,
+    WarehousesModule,
+    LocationsModule,
+    InventoryModule,
+    StockTransfersModule,
+    StockAdjustmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -567,6 +567,222 @@ async function main() {
       isDefault: true,
     },
   });
+
+  // Query variant for stock seeding
+  const variant = await prisma.productVariant.findFirst({
+    where: { sku: "IP17-128-BLK" },
+  });
+
+  // Seeding extra permissions for inventory
+  const newPermissions = [
+    { code: "inventory.read", module: "Inventory", name: "Read Inventory", description: "Allow viewing inventory levels" },
+    { code: "inventory.adjust", module: "Inventory", name: "Adjust Inventory", description: "Allow adjusting inventory levels" },
+    { code: "inventory.transfer", module: "Inventory", name: "Transfer Inventory", description: "Allow stock transfers" },
+  ];
+
+  for (const perm of newPermissions) {
+    const dbPerm = await prisma.permission.upsert({
+      where: { code: perm.code },
+      update: {
+        module: perm.module,
+        name: perm.name,
+        description: perm.description,
+      },
+      create: perm,
+    });
+
+    await prisma.rolePermission.upsert({
+      where: {
+        roleId_permissionId: {
+          roleId: adminRole.id,
+          permissionId: dbPerm.id,
+        },
+      },
+      update: {},
+      create: {
+        roleId: adminRole.id,
+        permissionId: dbPerm.id,
+      },
+    });
+  }
+
+  // Seeding Warehouses
+  const mainWarehouse = await prisma.warehouse.upsert({
+    where: {
+      organizationId_code: {
+        organizationId: organization.id,
+        code: "WH-MAIN",
+      },
+    },
+    update: {
+      name: "Main Warehouse",
+      description: "Main storage facility",
+      isDefault: true,
+    },
+    create: {
+      organizationId: organization.id,
+      storeId: store.id,
+      code: "WH-MAIN",
+      name: "Main Warehouse",
+      description: "Main storage facility",
+      isDefault: true,
+    },
+  });
+
+  const onlineWarehouse = await prisma.warehouse.upsert({
+    where: {
+      organizationId_code: {
+        organizationId: organization.id,
+        code: "WH-ONLINE",
+      },
+    },
+    update: {
+      name: "Online Warehouse",
+      description: "E-Commerce picking warehouse",
+      isDefault: false,
+    },
+    create: {
+      organizationId: organization.id,
+      storeId: store.id,
+      code: "WH-ONLINE",
+      name: "Online Warehouse",
+      description: "E-Commerce picking warehouse",
+      isDefault: false,
+    },
+  });
+
+  // Seeding locations
+  const zoneA = await prisma.location.upsert({
+    where: {
+      warehouseId_code: {
+        warehouseId: mainWarehouse.id,
+        code: "ZONE-A",
+      },
+    },
+    update: {
+      name: "Zone A",
+    },
+    create: {
+      warehouseId: mainWarehouse.id,
+      code: "ZONE-A",
+      name: "Zone A",
+    },
+  });
+
+  const rackA01 = await prisma.location.upsert({
+    where: {
+      warehouseId_code: {
+        warehouseId: mainWarehouse.id,
+        code: "RACK-A01",
+      },
+    },
+    update: {
+      name: "Rack A01",
+      parentId: zoneA.id,
+    },
+    create: {
+      warehouseId: mainWarehouse.id,
+      code: "RACK-A01",
+      name: "Rack A01",
+      parentId: zoneA.id,
+    },
+  });
+
+  const binA01_01 = await prisma.location.upsert({
+    where: {
+      warehouseId_code: {
+        warehouseId: mainWarehouse.id,
+        code: "BIN-A01-01",
+      },
+    },
+    update: {
+      name: "Bin A01-01",
+      parentId: rackA01.id,
+      allowPicking: true,
+      allowReceiving: true,
+      maxCapacity: new Prisma.Decimal("100.00"),
+      pickingRouteOrder: 1,
+    },
+    create: {
+      warehouseId: mainWarehouse.id,
+      code: "BIN-A01-01",
+      name: "Bin A01-01",
+      parentId: rackA01.id,
+      allowPicking: true,
+      allowReceiving: true,
+      maxCapacity: new Prisma.Decimal("100.00"),
+      pickingRouteOrder: 1,
+    },
+  });
+
+  // Seed inventory levels
+  if (variant) {
+    const inventory = await prisma.inventory.upsert({
+      where: {
+        variantId_warehouseId_locationId: {
+          variantId: variant.id,
+          warehouseId: mainWarehouse.id,
+          locationId: binA01_01.id,
+        },
+      },
+      update: {
+        quantityOnHand: 100,
+        quantityReserved: 20,
+        quantityAvailable: 80,
+      },
+      create: {
+        variantId: variant.id,
+        warehouseId: mainWarehouse.id,
+        locationId: binA01_01.id,
+        quantityOnHand: 100,
+        quantityReserved: 20,
+        quantityAvailable: 80,
+      },
+    });
+
+    // Seed Lot
+    await prisma.inventoryLot.deleteMany({ where: { inventoryId: inventory.id } });
+    await prisma.inventoryLot.create({
+      data: {
+        inventoryId: inventory.id,
+        lotNumber: "LOT240701",
+        manufactureDate: new Date("2026-07-01"),
+        expireDate: new Date("2027-07-01"),
+        quantity: 100,
+      },
+    });
+
+    // Seed Serials
+    await prisma.inventorySerial.deleteMany({ where: { inventoryId: inventory.id } });
+    await prisma.inventorySerial.createMany({
+      data: [
+        { inventoryId: inventory.id, serialNumber: "SN-IP17-001", status: "AVAILABLE" },
+        { inventoryId: inventory.id, serialNumber: "SN-IP17-002", status: "AVAILABLE" },
+        { inventoryId: inventory.id, serialNumber: "SN-IP17-003", status: "AVAILABLE" },
+      ],
+    });
+
+    // Seed transaction ledger
+    await prisma.inventoryTransaction.deleteMany({
+      where: {
+        variantId: variant.id,
+        warehouseId: mainWarehouse.id,
+        locationId: binA01_01.id,
+        type: "RECEIVE",
+      },
+    });
+    await prisma.inventoryTransaction.create({
+      data: {
+        variantId: variant.id,
+        warehouseId: mainWarehouse.id,
+        locationId: binA01_01.id,
+        type: "RECEIVE",
+        quantity: 100,
+        referenceType: "INITIAL_SEED",
+        createdBy: adminUser.id,
+      },
+    });
+  }
 
   console.log({
     country: thailand.code,
