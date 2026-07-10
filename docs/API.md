@@ -631,3 +631,91 @@ Manage sales quotations with line items. Header and line totals are computed by 
 *   **Response (200 OK)**: Quotation with `deletedAt` set (workflow `status` is preserved).
 *   **Error Responses**:
     *   `404 Not Found`: Quotation not found.
+
+---
+
+## Price Books API
+
+Manage customer/group pricing lists with line items. Organization-scoped, soft-deleted.
+
+*   `GET /price-books` — Query: `organizationId` (**required**), `customerGroupId`, `status`. Returns price books (with `customerGroup`) ordered by name.
+*   `GET /price-books/:id` — Returns the price book with `customerGroup` and `items` (each with `variant`). `404` if not found.
+*   `POST /price-books` — Body: `organizationId`, `code`, `name`, optional `customerGroupId`, `description`, `currency` (default `THB`), `effectiveDate`, `expiryDate`, `items[]` (`variantId`, `price`, optional `minQuantity` default `1`). `status` defaults to `ACTIVE`. `409` on duplicate code.
+*   `PATCH /price-books/:id` — Any subset of the create fields. When `items` is supplied, existing items are fully replaced in a transaction.
+*   `DELETE /price-books/:id` — Soft delete (`status: INACTIVE` + `deletedAt`).
+
+---
+
+## Purchase Requests API
+
+Internal purchase requisitions with line items. Organization + store scoped, soft-deleted via `deletedAt`.
+
+*   `GET /purchase-requests` — Query: `organizationId` (**required**), `storeId`, `status`. Returns requests (with `store`) ordered by request date descending.
+*   `GET /purchase-requests/:id` — Returns the request with `store` and `items` (each with `variant`, `unit`). `404` if not found.
+*   `POST /purchase-requests` — Body: `organizationId`, `storeId`, `requestNo`, `requestBy`, optional `requestDate`, `status` (default `DRAFT`), `remark`, and `items[]` (`variantId`, `unitId`, `quantity`, optional `remark`). `400` if no items; `409` on duplicate request number.
+*   `PATCH /purchase-requests/:id` — Header fields and/or `items` (full replacement in a transaction).
+*   `DELETE /purchase-requests/:id` — Soft delete (`deletedAt`).
+
+---
+
+## Purchase Invoices API
+
+Vendor invoices (AP) with line items. Scoped by vendor; soft-deleted via `deletedAt`.
+
+**Totals** — per line `lineTotal = quantity × unitPrice`; header `subtotal = Σ lineTotal`, `grandTotal = subtotal + vat`.
+
+*   `GET /purchase-invoices` — Query (all optional): `vendorId`, `purchaseOrderId`, `status`. Returns invoices (with `vendor`) ordered by invoice date descending.
+*   `GET /purchase-invoices/:id` — Returns the invoice with `vendor`, `purchaseOrder`, `items`, `payments`. `404` if not found.
+*   `POST /purchase-invoices` — Body: `vendorId`, `invoiceNo`, `invoiceDate`, optional `purchaseOrderId`, `dueDate`, `vat`, and `items[]` (`variantId`, `unitId`, `quantity`, `unitPrice`, optional `description`). `subtotal`/`grandTotal`/line totals computed server-side. `400` if no items; `409` on duplicate invoice number per vendor.
+*   `PATCH /purchase-invoices/:id` — Header fields and/or `items`. Supplying `items` recomputes totals in a transaction; supplying only `vat` recomputes `grandTotal`.
+*   `DELETE /purchase-invoices/:id` — Soft delete (`deletedAt`).
+
+---
+
+## Purchase Returns API
+
+Vendor returns with line items. Scoped by vendor; soft-deleted via `deletedAt`.
+
+*   `GET /purchase-returns` — Query (all optional): `vendorId`, `status`. Returns returns (with `vendor`) ordered by return date descending.
+*   `GET /purchase-returns/:id` — Returns the return with `vendor` and `items` (each with `variant`, `unit`). `404` if not found.
+*   `POST /purchase-returns` — Body: `vendorId`, `returnNo`, optional `returnDate`, `reason`, `status` (default `DRAFT`), and `items[]` (`variantId`, `unitId`, `quantity`, optional `reason`). `400` if no items; `409` on duplicate return number per vendor.
+*   `PATCH /purchase-returns/:id` — Header fields and/or `items` (full replacement in a transaction).
+*   `DELETE /purchase-returns/:id` — Soft delete (`deletedAt`).
+
+---
+
+## Sales Invoices API
+
+Customer invoices (AR) with line items. Scoped by sales order; soft-deleted via `deletedAt`.
+
+**Totals** — per line `lineTotal = quantity × unitPrice`; header `subtotal = Σ lineTotal`, `grandTotal = subtotal + vat`.
+
+*   `GET /sales-invoices` — Query (all optional): `salesOrderId`, `status`. Returns invoices (with `salesOrder`) ordered by invoice date descending.
+*   `GET /sales-invoices/:id` — Returns the invoice with `salesOrder`, `items`, `receipts`. `404` if not found.
+*   `POST /sales-invoices` — Body: `salesOrderId`, `invoiceNo`, optional `invoiceDate`, `vat`, and `items[]` (`variantId`, `unitId`, `quantity`, `unitPrice`). Totals computed server-side. `400` if no items; `409` on duplicate invoice number.
+*   `PATCH /sales-invoices/:id` — Header fields and/or `items`. Supplying `items` recomputes totals in a transaction; supplying only `vat` recomputes `grandTotal`.
+*   `DELETE /sales-invoices/:id` — Soft delete (`deletedAt`).
+
+---
+
+## Sales Returns API
+
+Customer returns with line items. Scoped by sales order; soft-deleted via `deletedAt`.
+
+*   `GET /sales-returns` — Query (all optional): `salesOrderId`, `status`. Returns returns (with `salesOrder`) ordered by return date descending.
+*   `GET /sales-returns/:id` — Returns the return with `salesOrder` and `items` (each with `variant`, `unit`). `404` if not found.
+*   `POST /sales-returns` — Body: `salesOrderId`, `returnNo`, optional `returnDate`, `reason`, `status` (default `COMPLETED`), and `items[]` (`variantId`, `unitId`, `quantity`, optional `reason`). `400` if no items; `409` on duplicate return number.
+*   `PATCH /sales-returns/:id` — Header fields and/or `items` (full replacement in a transaction).
+*   `DELETE /sales-returns/:id` — Soft delete (`deletedAt`).
+
+---
+
+## Receipts API
+
+Payment receipts against sales invoices (no line items). Scoped by sales invoice; soft-deleted via `deletedAt`.
+
+*   `GET /receipts` — Query (all optional): `salesInvoiceId`, `status`. Returns receipts (with `salesInvoice`) ordered by payment date descending.
+*   `GET /receipts/:id` — Returns the receipt with `salesInvoice`. `404` if not found.
+*   `POST /receipts` — Body: `salesInvoiceId`, `receiptNo`, `paymentMethod`, `amount`, optional `paymentDate`, `reference`, `status` (default `COMPLETED`). `409` on duplicate receipt number.
+*   `PATCH /receipts/:id` — Any subset of the create fields.
+*   `DELETE /receipts/:id` — Soft delete (`deletedAt`).

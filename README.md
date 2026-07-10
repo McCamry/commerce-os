@@ -74,8 +74,8 @@ The Prisma schema spans the full enterprise model (location master data, org & s
 
 API modules are being implemented incrementally on top of that schema:
 
-- **Implemented (CRUD/logic)**: products, product categories, brands, units, taxes, stores, warehouses, locations, users, roles & permissions, auth, inventory, stock transfers/adjustments, goods receives, sales orders, shipments, customers, vendors, quotations.
-- **Scaffolded / not yet implemented**: price books, purchase requests/invoices/returns, sales invoices/returns, receipts, and the marketplace connectors.
+- **Implemented (CRUD/logic)**: products, product categories, brands, units, taxes, stores, warehouses, locations, users, roles & permissions, auth, inventory, stock transfers/adjustments, goods receives, sales orders, shipments, customers, vendors, quotations, price books, purchase requests/invoices/returns, sales invoices/returns, receipts.
+- **Scaffolded / not yet implemented**: the marketplace connectors (Shopee/sync workers).
 
 ## Notes
 
