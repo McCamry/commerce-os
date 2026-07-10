@@ -433,3 +433,201 @@ Manage product catalog details, pricing, and associations.
     }
     ```
 *   **Response (200 OK)**: Updated role with list of assigned permissions.
+
+---
+
+## Customers API
+
+Manage customer master data (AR counterparties). Customers are organization-scoped and soft-deleted.
+
+### 1. List Customers
+*   **Method**: `GET`
+*   **Path**: `/customers`
+*   **Query Parameters**:
+    *   `organizationId` (Required, string/UUID): Filter by organization.
+    *   `customerGroupId` (Optional, string/UUID): Filter by customer group.
+    *   `status` (Optional, `RecordStatus`): Filter by status (`ACTIVE` or `INACTIVE`).
+*   **Response (200 OK)**: Array of customers (each including its `customerGroup`), ordered by name.
+*   **Error Responses**:
+    *   `400 Bad Request`: `organizationId` query parameter is missing.
+
+### 2. Get Customer Detail
+*   **Method**: `GET`
+*   **Path**: `/customers/:id`
+*   **Response (200 OK)**: Customer object including `customerGroup`, `addresses`, and `contacts`.
+*   **Error Responses**:
+    *   `404 Not Found`: Customer not found.
+
+### 3. Create Customer
+*   **Method**: `POST`
+*   **Path**: `/customers`
+*   **Body**:
+    ```json
+    {
+      "organizationId": "504c5520-22c6-4e50-9d35-f09c62985ce4",
+      "customerGroupId": "grp-uuid-1",
+      "code": "CUST-001",
+      "name": "ACME Co., Ltd.",
+      "taxId": "0105551234567",
+      "branch": "HQ",
+      "contactPerson": "Somchai",
+      "phone1": "021234567",
+      "email": "ap@acme.co.th",
+      "creditDays": 30,
+      "creditLimit": 500000
+    }
+    ```
+*   **Notes**: `creditDays` defaults to `0` and `status` defaults to `ACTIVE` when omitted.
+*   **Response (201 Created)**: Returns the newly created customer.
+*   **Error Responses**:
+    *   `409 Conflict`: Customer code already exists under this organization.
+    *   `404 Not Found`: Related organization or customer group not found.
+
+### 4. Update Customer
+*   **Method**: `PATCH`
+*   **Path**: `/customers/:id`
+*   **Body**: Any subset of the create fields.
+*   **Response (200 OK)**: Returns the updated customer.
+*   **Error Responses**:
+    *   `404 Not Found`: Customer not found.
+    *   `409 Conflict`: Code conflicts with another customer under the organization.
+
+### 5. Delete Customer (Soft Delete)
+*   **Method**: `DELETE`
+*   **Path**: `/customers/:id`
+*   **Response (200 OK)**: Customer with `status: "INACTIVE"` and `deletedAt` set.
+*   **Error Responses**:
+    *   `404 Not Found`: Customer not found.
+
+---
+
+## Vendors API
+
+Manage vendor/supplier master data (AP counterparties). Organization-scoped and soft-deleted.
+
+### 1. List Vendors
+*   **Method**: `GET`
+*   **Path**: `/vendors`
+*   **Query Parameters**:
+    *   `organizationId` (Required, string/UUID): Filter by organization.
+    *   `status` (Optional, `RecordStatus`): Filter by status (`ACTIVE` or `INACTIVE`).
+*   **Response (200 OK)**: Array of vendors, ordered by name.
+*   **Error Responses**:
+    *   `400 Bad Request`: `organizationId` query parameter is missing.
+
+### 2. Get Vendor Detail
+*   **Method**: `GET`
+*   **Path**: `/vendors/:id`
+*   **Response (200 OK)**: Vendor object including `addresses`, `contacts`, and `priceLists`.
+*   **Error Responses**:
+    *   `404 Not Found`: Vendor not found.
+
+### 3. Create Vendor
+*   **Method**: `POST`
+*   **Path**: `/vendors`
+*   **Body**:
+    ```json
+    {
+      "organizationId": "504c5520-22c6-4e50-9d35-f09c62985ce4",
+      "code": "VEND-001",
+      "name": "Global Supply Co.",
+      "taxId": "0105559876543",
+      "contactPerson": "Nadia",
+      "phone1": "027654321",
+      "email": "sales@globalsupply.com",
+      "website": "https://globalsupply.com",
+      "creditDays": 45,
+      "creditLimit": 1000000,
+      "paymentTerm": "NET45"
+    }
+    ```
+*   **Notes**: `creditDays` defaults to `0` and `status` defaults to `ACTIVE` when omitted.
+*   **Response (201 Created)**: Returns the newly created vendor.
+*   **Error Responses**:
+    *   `409 Conflict`: Vendor code already exists under this organization.
+    *   `404 Not Found`: Related organization not found.
+
+### 4. Update Vendor
+*   **Method**: `PATCH`
+*   **Path**: `/vendors/:id`
+*   **Body**: Any subset of the create fields.
+*   **Response (200 OK)**: Returns the updated vendor.
+*   **Error Responses**:
+    *   `404 Not Found`: Vendor not found.
+    *   `409 Conflict`: Code conflicts with another vendor under the organization.
+
+### 5. Delete Vendor (Soft Delete)
+*   **Method**: `DELETE`
+*   **Path**: `/vendors/:id`
+*   **Response (200 OK)**: Vendor with `status: "INACTIVE"` and `deletedAt` set.
+*   **Error Responses**:
+    *   `404 Not Found`: Vendor not found.
+
+---
+
+## Quotations API
+
+Manage sales quotations with line items. Header and line totals are computed by the server.
+
+**Total calculation** — per line: `gross = quantity × unitPrice`, `net = gross − discount`, `lineTax = net × taxRate%`, and `lineTotal = net` (ex-tax). Header roll-up: `subtotal = Σ gross`, `discount = Σ line discount`, `vat = Σ lineTax`, `grandTotal = subtotal − discount + vat`.
+
+### 1. List Quotations
+*   **Method**: `GET`
+*   **Path**: `/quotations`
+*   **Query Parameters**:
+    *   `organizationId` (Required, string/UUID): Filter by organization.
+    *   `storeId` (Optional, string/UUID): Filter by store.
+    *   `customerId` (Optional, string/UUID): Filter by customer.
+    *   `status` (Optional, string): Workflow status (`DRAFT`, `SENT`, `ACCEPTED`, `REJECTED`, `EXPIRED`).
+*   **Response (200 OK)**: Array of quotations (each including `customer` and `store`), ordered by `quotationDate` descending.
+*   **Error Responses**:
+    *   `400 Bad Request`: `organizationId` query parameter is missing.
+
+### 2. Get Quotation Detail
+*   **Method**: `GET`
+*   **Path**: `/quotations/:id`
+*   **Response (200 OK)**: Quotation object including `customer`, `store`, and `items` (each with `variant` and `unit`).
+*   **Error Responses**:
+    *   `404 Not Found`: Quotation not found.
+
+### 3. Create Quotation
+*   **Method**: `POST`
+*   **Path**: `/quotations`
+*   **Body**:
+    ```json
+    {
+      "organizationId": "504c5520-22c6-4e50-9d35-f09c62985ce4",
+      "storeId": "s1a63cde-f1c5-4a58-86d1-002d0cf19230",
+      "customerId": "cust-uuid-1",
+      "quotationNo": "QT-2026-0001",
+      "quotationDate": "2026-07-10",
+      "expireDate": "2026-07-31",
+      "remark": "Net 30 terms",
+      "items": [
+        { "variantId": "var-uuid-1", "unitId": "unit-uuid-1", "quantity": 2, "unitPrice": 100, "taxRate": 7 },
+        { "variantId": "var-uuid-2", "unitId": "unit-uuid-1", "quantity": 1, "unitPrice": 50, "discount": 5 }
+      ]
+    }
+    ```
+*   **Notes**: `status` defaults to `DRAFT`. `subtotal`, `discount`, `vat`, `grandTotal`, and each line's `lineTotal` are computed server-side.
+*   **Response (201 Created)**: Returns the created quotation with computed totals and items.
+*   **Error Responses**:
+    *   `400 Bad Request`: No items supplied.
+    *   `409 Conflict`: Quotation number already exists under this organization.
+    *   `404 Not Found`: Related organization, store, customer, variant, or unit not found.
+
+### 4. Update Quotation
+*   **Method**: `PATCH`
+*   **Path**: `/quotations/:id`
+*   **Body**: Header fields (`quotationDate`, `expireDate`, `remark`, `status`) and/or `items`. When `items` is supplied, the existing lines are fully replaced and all totals recomputed in a single transaction.
+*   **Response (200 OK)**: Returns the updated quotation.
+*   **Error Responses**:
+    *   `400 Bad Request`: `items` supplied but empty.
+    *   `404 Not Found`: Quotation not found.
+
+### 5. Delete Quotation (Soft Delete)
+*   **Method**: `DELETE`
+*   **Path**: `/quotations/:id`
+*   **Response (200 OK)**: Quotation with `deletedAt` set (workflow `status` is preserved).
+*   **Error Responses**:
+    *   `404 Not Found`: Quotation not found.

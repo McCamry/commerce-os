@@ -23,7 +23,13 @@ describe('QuotationsService', () => {
     customerId: 'cust-1',
     quotationNo: 'QT-001',
     items: [
-      { variantId: 'v-1', unitId: 'u-1', quantity: 2, unitPrice: 100, taxRate: 7 },
+      {
+        variantId: 'v-1',
+        unitId: 'u-1',
+        quantity: 2,
+        unitPrice: 100,
+        taxRate: 7,
+      },
       {
         variantId: 'v-2',
         unitId: 'u-1',
@@ -100,7 +106,9 @@ describe('QuotationsService', () => {
       prisma.$transaction.mockImplementation((cb) => cb(tx));
 
       await service.update('q-1', {
-        items: [{ variantId: 'v-9', unitId: 'u-1', quantity: 3, unitPrice: 10 }],
+        items: [
+          { variantId: 'v-9', unitId: 'u-1', quantity: 3, unitPrice: 10 },
+        ],
       });
 
       expect(tx.quotationItem.deleteMany).toHaveBeenCalledWith({
@@ -114,9 +122,9 @@ describe('QuotationsService', () => {
     it('rejects an update that clears all items', async () => {
       prisma.quotation.findFirst.mockResolvedValue({ id: 'q-1' });
 
-      await expect(
-        service.update('q-1', { items: [] }),
-      ).rejects.toBeInstanceOf(BadRequestException);
+      await expect(service.update('q-1', { items: [] })).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
     });
   });
 

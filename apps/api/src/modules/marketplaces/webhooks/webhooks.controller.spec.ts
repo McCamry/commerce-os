@@ -46,9 +46,13 @@ describe('WebhooksController', () => {
     });
     prisma.marketplaceWebhook.create.mockResolvedValue({ id: 'wh-1' });
 
-    const result = await controller.handleWebhook('shopee', {}, {
-      type: 'ORDER_UPDATE',
-    });
+    const result = await controller.handleWebhook(
+      'shopee',
+      {},
+      {
+        type: 'ORDER_UPDATE',
+      },
+    );
 
     expect(prisma.marketplaceWebhook.create).toHaveBeenCalledWith(
       expect.objectContaining({

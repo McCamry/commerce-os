@@ -4,6 +4,6 @@ import { QuotationsService } from './quotations.service';
 
 @Module({
   controllers: [QuotationsController],
-  providers: [QuotationsService]
+  providers: [QuotationsService],
 })
 export class QuotationsModule {}

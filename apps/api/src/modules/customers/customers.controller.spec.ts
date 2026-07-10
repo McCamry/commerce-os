@@ -35,9 +35,9 @@ describe('CustomersController', () => {
   });
 
   it('requires organizationId on findAll', () => {
-    expect(() =>
-      controller.findAll(undefined as unknown as string),
-    ).toThrow(BadRequestException);
+    expect(() => controller.findAll(undefined as unknown as string)).toThrow(
+      BadRequestException,
+    );
   });
 
   it('forwards findAll filters to the service', () => {

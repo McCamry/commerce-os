@@ -70,16 +70,14 @@ pnpm db:studio
 
 ## Current Domain Foundation
 
-The Prisma schema currently focuses on master data:
+The Prisma schema spans the full enterprise model (location master data, org & security, product catalog, inventory/WMS, purchasing, sales/OMS, marketplace sync, accounting, and BI). See [docs/DATABASE.md](docs/DATABASE.md) for the domain breakdown.
 
-- Countries, provinces, districts, and subdistricts
-- Organizations
-- Stores
-- Record status and marketplace enums
+API modules are being implemented incrementally on top of that schema:
 
-The roadmap then moves through authentication, products, categories, inventory, orders, customers, dashboarding, and marketplace connectors.
+- **Implemented (CRUD/logic)**: products, product categories, brands, units, taxes, stores, warehouses, locations, users, roles & permissions, auth, inventory, stock transfers/adjustments, goods receives, sales orders, shipments, customers, vendors, quotations.
+- **Scaffolded / not yet implemented**: price books, purchase requests/invoices/returns, sales invoices/returns, receipts, and the marketplace connectors.
 
 ## Notes
 
-- The database schema is ahead of some app code. API modules for products, categories, inventory, orders, and customers are not implemented yet.
+- The database schema is ahead of the app code: many models still have no corresponding API module yet (accounting, BI, deep OMS/WMS, promotions/CRM). Check `apps/api/src/modules` for what is actually wired up.
 - When changing `packages/database/prisma/schema.prisma`, create and commit the matching Prisma migration before relying on the schema in seed data or API code.
