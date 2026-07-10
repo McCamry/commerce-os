@@ -1,25 +1,17 @@
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class UpdateLocationDto {
   @IsString()
   @IsOptional()
-  name?: string;
+  code?: string;
 
-  @IsBoolean()
+  @IsString()
   @IsOptional()
-  allowPicking?: boolean;
+  barcode?: string;
 
-  @IsBoolean()
+  @IsString()
   @IsOptional()
-  allowReceiving?: boolean;
-
-  @IsNumber()
-  @IsOptional()
-  maxCapacity?: number;
-
-  @IsNumber()
-  @IsOptional()
-  pickingRouteOrder?: number;
+  binId?: string;
 
   @IsString()
   @IsOptional()

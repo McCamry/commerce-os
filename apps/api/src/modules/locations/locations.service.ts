@@ -12,128 +12,77 @@ import { UpdateLocationDto } from './dto/update-location.dto';
 export class LocationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(filter: {
-    warehouseId: string;
-  }): Promise<Record<string, unknown>[]> {
-    const locations = await this.prisma.location.findMany({
-      where: { warehouseId: filter.warehouseId, deletedAt: null },
-      orderBy: [{ pickingRouteOrder: 'asc' }, { code: 'asc' }],
-      include: {
-        parent: true,
-      },
+  findAll(filter: { warehouseId: string }) {
+    return this.prisma.warehouseLocation.findMany({
+      where: { warehouseId: filter.warehouseId },
+      orderBy: [{ code: 'asc' }],
+      include: { bin: true },
     });
-
-    return locations.map((loc) =>
-      this.mapLocationDecimals(loc as unknown as Record<string, unknown>),
-    );
   }
 
-  async findOne(id: string): Promise<Record<string, unknown>> {
-    const loc = await this.prisma.location.findFirst({
-      where: { id, deletedAt: null },
-      include: {
-        parent: true,
-      },
+  async findOne(id: string) {
+    const location = await this.prisma.warehouseLocation.findUnique({
+      where: { id },
+      include: { bin: true, warehouse: true },
     });
-    if (!loc) {
+
+    if (!location) {
       throw new NotFoundException('Location not found');
     }
-    return this.mapLocationDecimals(loc as unknown as Record<string, unknown>);
+
+    return location;
   }
 
-  async create(dto: CreateLocationDto): Promise<Record<string, unknown>> {
+  async create(dto: CreateLocationDto) {
     try {
-      const loc = await this.prisma.location.create({
+      return await this.prisma.warehouseLocation.create({
         data: {
           warehouseId: dto.warehouseId,
-          parentId: dto.parentId || null,
+          binId: dto.binId || null,
           code: dto.code.toUpperCase(),
-          name: dto.name,
-          allowPicking:
-            dto.allowPicking !== undefined ? dto.allowPicking : true,
-          allowReceiving:
-            dto.allowReceiving !== undefined ? dto.allowReceiving : true,
-          maxCapacity: dto.maxCapacity
-            ? new Prisma.Decimal(dto.maxCapacity)
-            : null,
-          pickingRouteOrder: dto.pickingRouteOrder || 0,
+          barcode: dto.barcode,
           status: 'ACTIVE',
         },
       });
-      return this.mapLocationDecimals(
-        loc as unknown as Record<string, unknown>,
-      );
     } catch (error) {
       this.handleWriteError(error);
     }
   }
 
-  async update(
-    id: string,
-    dto: UpdateLocationDto,
-  ): Promise<Record<string, unknown>> {
+  async update(id: string, dto: UpdateLocationDto) {
     await this.findOne(id);
-
-    const updateData: Prisma.LocationUpdateInput = {
-      name: dto.name,
-      allowPicking: dto.allowPicking,
-      allowReceiving: dto.allowReceiving,
-      pickingRouteOrder: dto.pickingRouteOrder,
-      status: dto.status,
-    };
-
-    if (dto.maxCapacity !== undefined) {
-      updateData.maxCapacity = dto.maxCapacity
-        ? new Prisma.Decimal(dto.maxCapacity)
-        : null;
-    }
 
     try {
-      const loc = await this.prisma.location.update({
+      return await this.prisma.warehouseLocation.update({
         where: { id },
-        data: updateData,
+        data: {
+          code: dto.code ? dto.code.toUpperCase() : undefined,
+          barcode: dto.barcode,
+          binId: dto.binId,
+          status: dto.status,
+        },
       });
-      return this.mapLocationDecimals(
-        loc as unknown as Record<string, unknown>,
-      );
     } catch (error) {
       this.handleWriteError(error);
     }
   }
 
-  async remove(id: string): Promise<Record<string, unknown>> {
+  async remove(id: string) {
     await this.findOne(id);
 
-    const loc = await this.prisma.location.update({
+    return this.prisma.warehouseLocation.update({
       where: { id },
-      data: {
-        status: 'INACTIVE',
-        deletedAt: new Date(),
-      },
+      data: { status: 'INACTIVE' },
     });
-    return this.mapLocationDecimals(loc as unknown as Record<string, unknown>);
-  }
-
-  private mapLocationDecimals(
-    loc: Record<string, unknown>,
-  ): Record<string, unknown> {
-    return {
-      ...loc,
-      maxCapacity: loc.maxCapacity ? Number(loc.maxCapacity) : null,
-    };
   }
 
   private handleWriteError(error: unknown): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
-        throw new ConflictException(
-          'Location code already exists under this warehouse',
-        );
+        throw new ConflictException('Location code or barcode already exists');
       }
       if (error.code === 'P2003') {
-        throw new NotFoundException(
-          'Related warehouse or parent location not found',
-        );
+        throw new NotFoundException('Related warehouse or bin not found');
       }
     }
     throw error;

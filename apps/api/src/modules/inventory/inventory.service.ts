@@ -10,18 +10,17 @@ export class InventoryService {
     warehouseId?: string,
     variantId?: string,
   ): Promise<Record<string, unknown>[]> {
-    const where: Prisma.InventoryWhereInput = {};
-    if (warehouseId) where.warehouseId = warehouseId;
-    if (variantId) where.variantId = variantId;
+    const where: Prisma.InventoryLocationWhereInput = {};
+    if (warehouseId) where.location = { warehouseId };
+    if (variantId) where.productVariantId = variantId;
 
-    const items = await this.prisma.inventory.findMany({
+    const items = await this.prisma.inventoryLocation.findMany({
       where,
       include: {
         variant: true,
-        warehouse: true,
-        location: true,
-        lots: true,
-        serials: true,
+        location: { include: { warehouse: true } },
+        lot: true,
+        serial: true,
       },
     });
     return items as unknown as Record<string, unknown>[];
@@ -35,13 +34,12 @@ export class InventoryService {
       throw new NotFoundException('Variant not found');
     }
 
-    const items = await this.prisma.inventory.findMany({
-      where: { variantId },
+    const items = await this.prisma.inventoryLocation.findMany({
+      where: { productVariantId: variantId },
       include: {
-        warehouse: true,
-        location: true,
-        lots: true,
-        serials: true,
+        location: { include: { warehouse: true } },
+        lot: true,
+        serial: true,
       },
     });
     return items as unknown as Record<string, unknown>[];

@@ -98,28 +98,25 @@ export class StockTransfersService {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       for (const item of transfer.items) {
-        const stock = await tx.inventory.findFirst({
+        const stock = await tx.inventoryLocation.findFirst({
           where: {
-            variantId: item.variantId,
-            warehouseId: transfer.fromWarehouseId,
-            locationId: item.fromLocationId,
+            productVariantId: item.variantId,
+            warehouseLocationId: item.fromLocationId,
           },
         });
 
-        const available = stock
-          ? stock.quantityOnHand - stock.quantityReserved
-          : 0;
+        const available = stock ? stock.quantity - stock.reservedQty : 0;
         if (available < item.quantity) {
           throw new BadRequestException(
             `Insufficient stock for SKU ${item.variant.sku} in source location. Available: ${available}, Required: ${item.quantity}`,
           );
         }
 
-        await tx.inventory.update({
+        await tx.inventoryLocation.update({
           where: { id: stock!.id },
           data: {
-            quantityReserved: { increment: item.quantity },
-            quantityAvailable: { decrement: item.quantity },
+            reservedQty: { increment: item.quantity },
+            availableQty: { decrement: item.quantity },
           },
         });
       }
@@ -145,11 +142,10 @@ export class StockTransfersService {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       for (const item of transfer.items) {
-        const sourceStock = await tx.inventory.findFirst({
+        const sourceStock = await tx.inventoryLocation.findFirst({
           where: {
-            variantId: item.variantId,
-            warehouseId: transfer.fromWarehouseId,
-            locationId: item.fromLocationId,
+            productVariantId: item.variantId,
+            warehouseLocationId: item.fromLocationId,
           },
         });
 
@@ -157,66 +153,61 @@ export class StockTransfersService {
           throw new BadRequestException('Source stock not found');
         }
 
-        await tx.inventory.update({
+        await tx.inventoryLocation.update({
           where: { id: sourceStock.id },
           data: {
-            quantityOnHand: { decrement: item.quantity },
-            quantityReserved: { decrement: item.quantity },
+            quantity: { decrement: item.quantity },
+            reservedQty: { decrement: item.quantity },
           },
         });
 
-        const destStock = await tx.inventory.findFirst({
+        const destStock = await tx.inventoryLocation.findFirst({
           where: {
-            variantId: item.variantId,
-            warehouseId: transfer.toWarehouseId,
-            locationId: item.toLocationId,
+            productVariantId: item.variantId,
+            warehouseLocationId: item.toLocationId,
           },
         });
 
         if (destStock) {
-          await tx.inventory.update({
+          await tx.inventoryLocation.update({
             where: { id: destStock.id },
             data: {
-              quantityOnHand: { increment: item.quantity },
-              quantityAvailable: { increment: item.quantity },
+              quantity: { increment: item.quantity },
+              availableQty: { increment: item.quantity },
             },
           });
         } else {
-          await tx.inventory.create({
+          await tx.inventoryLocation.create({
             data: {
-              variantId: item.variantId,
-              warehouseId: transfer.toWarehouseId,
-              locationId: item.toLocationId,
-              quantityOnHand: item.quantity,
-              quantityAvailable: item.quantity,
-              status: 'Available',
+              productVariantId: item.variantId,
+              warehouseLocationId: item.toLocationId,
+              quantity: item.quantity,
+              availableQty: item.quantity,
             },
           });
         }
 
-        await tx.inventoryTransaction.create({
+        await tx.inventoryMovement.create({
           data: {
             variantId: item.variantId,
-            warehouseId: transfer.fromWarehouseId,
-            locationId: item.fromLocationId,
+            fromLocationId: item.fromLocationId,
             type: 'TRANSFER',
             quantity: -item.quantity,
             referenceType: 'STOCK_TRANSFER',
             referenceId: transfer.id,
-            createdBy: userId,
+            movedBy: userId,
           },
         });
 
-        await tx.inventoryTransaction.create({
+        await tx.inventoryMovement.create({
           data: {
             variantId: item.variantId,
-            warehouseId: transfer.toWarehouseId,
-            locationId: item.toLocationId,
+            toLocationId: item.toLocationId,
             type: 'TRANSFER',
             quantity: item.quantity,
             referenceType: 'STOCK_TRANSFER',
             referenceId: transfer.id,
-            createdBy: userId,
+            movedBy: userId,
           },
         });
       }
@@ -245,20 +236,19 @@ export class StockTransfersService {
     const updated = await this.prisma.$transaction(async (tx) => {
       if (transfer.status === 'APPROVED') {
         for (const item of transfer.items) {
-          const sourceStock = await tx.inventory.findFirst({
+          const sourceStock = await tx.inventoryLocation.findFirst({
             where: {
-              variantId: item.variantId,
-              warehouseId: transfer.fromWarehouseId,
-              locationId: item.fromLocationId,
+              productVariantId: item.variantId,
+              warehouseLocationId: item.fromLocationId,
             },
           });
 
           if (sourceStock) {
-            await tx.inventory.update({
+            await tx.inventoryLocation.update({
               where: { id: sourceStock.id },
               data: {
-                quantityReserved: { decrement: item.quantity },
-                quantityAvailable: { increment: item.quantity },
+                reservedQty: { decrement: item.quantity },
+                availableQty: { increment: item.quantity },
               },
             });
           }

@@ -1,10 +1,4 @@
-import {
-  IsBoolean,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateLocationDto {
   @IsString()
@@ -13,7 +7,7 @@ export class CreateLocationDto {
 
   @IsString()
   @IsOptional()
-  parentId?: string;
+  binId?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -21,21 +15,5 @@ export class CreateLocationDto {
 
   @IsString()
   @IsNotEmpty()
-  name: string;
-
-  @IsBoolean()
-  @IsOptional()
-  allowPicking?: boolean;
-
-  @IsBoolean()
-  @IsOptional()
-  allowReceiving?: boolean;
-
-  @IsNumber()
-  @IsOptional()
-  maxCapacity?: number;
-
-  @IsNumber()
-  @IsOptional()
-  pickingRouteOrder?: number;
+  barcode: string;
 }

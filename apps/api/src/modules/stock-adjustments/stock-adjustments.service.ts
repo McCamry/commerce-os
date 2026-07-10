@@ -62,24 +62,23 @@ export class StockAdjustmentsService {
       });
 
       for (const item of dto.items) {
-        const stock = await tx.inventory.findFirst({
+        const stock = await tx.inventoryLocation.findFirst({
           where: {
-            variantId: item.variantId,
-            warehouseId: dto.warehouseId,
-            locationId: item.locationId,
+            productVariantId: item.variantId,
+            warehouseLocationId: item.warehouseLocationId,
           },
         });
 
-        const systemQty = stock ? stock.quantityOnHand : 0;
-        const difference = item.countQty - systemQty;
+        const beforeQty = stock ? stock.quantity : 0;
+        const difference = item.countQty - beforeQty;
 
         await tx.stockAdjustmentItem.create({
           data: {
             adjustmentId: adjustment.id,
             variantId: item.variantId,
-            locationId: item.locationId,
-            systemQty,
-            countQty: item.countQty,
+            warehouseLocationId: item.warehouseLocationId,
+            beforeQty,
+            afterQty: item.countQty,
             difference,
           },
         });
@@ -105,46 +104,42 @@ export class StockAdjustmentsService {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       for (const item of adj.items) {
-        const stock = await tx.inventory.findFirst({
+        const stock = await tx.inventoryLocation.findFirst({
           where: {
-            variantId: item.variantId,
-            warehouseId: adj.warehouseId,
-            locationId: item.locationId,
+            productVariantId: item.variantId,
+            warehouseLocationId: item.warehouseLocationId,
           },
         });
 
         if (stock) {
-          await tx.inventory.update({
+          await tx.inventoryLocation.update({
             where: { id: stock.id },
             data: {
-              quantityOnHand: item.countQty,
-              quantityAvailable: item.countQty - stock.quantityReserved,
+              quantity: item.afterQty,
+              availableQty: item.afterQty - stock.reservedQty,
             },
           });
         } else {
-          await tx.inventory.create({
+          await tx.inventoryLocation.create({
             data: {
-              variantId: item.variantId,
-              warehouseId: adj.warehouseId,
-              locationId: item.locationId,
-              quantityOnHand: item.countQty,
-              quantityAvailable: item.countQty,
-              status: 'Available',
+              productVariantId: item.variantId,
+              warehouseLocationId: item.warehouseLocationId,
+              quantity: item.afterQty,
+              availableQty: item.afterQty,
             },
           });
         }
 
         if (item.difference !== 0) {
-          await tx.inventoryTransaction.create({
+          await tx.inventoryMovement.create({
             data: {
               variantId: item.variantId,
-              warehouseId: adj.warehouseId,
-              locationId: item.locationId,
+              toLocationId: item.warehouseLocationId,
               type: 'ADJUST',
               quantity: item.difference,
               referenceType: 'STOCK_ADJUSTMENT',
               referenceId: adj.id,
-              createdBy: userId,
+              movedBy: userId,
             },
           });
         }

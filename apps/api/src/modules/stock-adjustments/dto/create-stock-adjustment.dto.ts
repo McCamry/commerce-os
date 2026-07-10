@@ -16,7 +16,7 @@ export class StockAdjustmentItemDto {
 
   @IsString()
   @IsNotEmpty()
-  locationId: string;
+  warehouseLocationId: string;
 
   @IsInt()
   @Min(0)
