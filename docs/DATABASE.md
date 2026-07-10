@@ -12,16 +12,20 @@
 - Shared Inventory
 - Marketplace Independent
 
-## Current Scope
+## Current Scope (Sprints 1-11)
 
-- Location master data: countries, provinces, districts, subdistricts
-- Business master data: organizations, stores
-- Product & Category data:
-  - `Category`: Hierarchy tree structure (self-relation) under `Organization`
-  - `Product`: Master product listings linked to `Organization` and classified by `Category`
-  - `ProductMedia`: Support for product images and videos with display ordering
-- Soft delete support through `deleted_at`
-- Active/inactive status through `RecordStatus`
+The database schema has evolved from a simple foundation into a full-fledged Enterprise architecture, covering:
+- **Location Master Data**: Countries, provinces, districts, subdistricts.
+- **Organization & Security**: Auth, RBAC, Organizations, Stores.
+- **Product Catalog (PIM)**: Hierarchical Categories, Brands, Variants, Pricing, Media.
+- **Inventory & Warehouse (WMS)**: Hierarchical warehouses (Aisles, Racks, Shelves, Bins), Stock Ledger, Transfers, Cycle Counts.
+- **Purchasing**: Procurement, Vendors, Purchase Orders, Goods Receipt.
+- **Sales & OMS**: Customers, Quotations, Sales Orders, Order Routing, Split Shipments.
+- **Marketplace Sync**: Shopee, Lazada, TikTok Sync configurations.
+- **Financial & Accounting**: General Ledger, Multi-book accounting, Accounts Payable (AP), Accounts Receivable (AR), Cash & Bank, Taxation, Enterprise Rule Engine for Journals.
+- **Business Intelligence (BI) & Analytics**: Metric Definitions, KPIs, Report Templates, Data Warehouse Fact Tables (Sales, Purchase, Inventory, Finance), Forecast Models, Alert Rules.
+
+*Note: For the exhaustive list of models and relationships, please refer to the actual `schema.prisma` file.*
 
 ## Database Models Design (Prisma Reference)
 
