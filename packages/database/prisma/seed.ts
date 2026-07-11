@@ -651,135 +651,71 @@ async function main() {
     },
   });
 
-  // Seeding locations
-  const zoneA = await prisma.location.upsert({
-    where: {
-      warehouseId_code: {
-        warehouseId: mainWarehouse.id,
-        code: "ZONE-A",
-      },
-    },
-    update: {
-      name: "Zone A",
-    },
+  // Seeding warehouse location (WMS)
+  const warehouseLocation = await prisma.warehouseLocation.upsert({
+    where: { code: "LOC-A01-01" },
+    update: { status: "ACTIVE" },
     create: {
       warehouseId: mainWarehouse.id,
-      code: "ZONE-A",
-      name: "Zone A",
-    },
-  });
-
-  const rackA01 = await prisma.location.upsert({
-    where: {
-      warehouseId_code: {
-        warehouseId: mainWarehouse.id,
-        code: "RACK-A01",
-      },
-    },
-    update: {
-      name: "Rack A01",
-      parentId: zoneA.id,
-    },
-    create: {
-      warehouseId: mainWarehouse.id,
-      code: "RACK-A01",
-      name: "Rack A01",
-      parentId: zoneA.id,
-    },
-  });
-
-  const binA01_01 = await prisma.location.upsert({
-    where: {
-      warehouseId_code: {
-        warehouseId: mainWarehouse.id,
-        code: "BIN-A01-01",
-      },
-    },
-    update: {
-      name: "Bin A01-01",
-      parentId: rackA01.id,
-      allowPicking: true,
-      allowReceiving: true,
-      maxCapacity: new Prisma.Decimal("100.00"),
-      pickingRouteOrder: 1,
-    },
-    create: {
-      warehouseId: mainWarehouse.id,
-      code: "BIN-A01-01",
-      name: "Bin A01-01",
-      parentId: rackA01.id,
-      allowPicking: true,
-      allowReceiving: true,
-      maxCapacity: new Prisma.Decimal("100.00"),
-      pickingRouteOrder: 1,
+      code: "LOC-A01-01",
+      barcode: "BC-LOC-A01-01",
+      status: "ACTIVE",
     },
   });
 
   // Seed inventory levels
   if (variant) {
-    const inventory = await prisma.inventory.upsert({
-      where: {
-        variantId_warehouseId_locationId: {
-          variantId: variant.id,
-          warehouseId: mainWarehouse.id,
-          locationId: binA01_01.id,
-        },
-      },
-      update: {
-        quantityOnHand: 100,
-        quantityReserved: 20,
-        quantityAvailable: 80,
-      },
-      create: {
-        variantId: variant.id,
-        warehouseId: mainWarehouse.id,
-        locationId: binA01_01.id,
-        quantityOnHand: 100,
-        quantityReserved: 20,
-        quantityAvailable: 80,
-      },
-    });
-
-    // Seed Lot
-    await prisma.inventoryLot.deleteMany({ where: { inventoryId: inventory.id } });
-    await prisma.inventoryLot.create({
+    // Lot
+    await prisma.inventoryLot.deleteMany({ where: { variantId: variant.id } });
+    const lot = await prisma.inventoryLot.create({
       data: {
-        inventoryId: inventory.id,
+        variantId: variant.id,
         lotNumber: "LOT240701",
         manufactureDate: new Date("2026-07-01"),
         expireDate: new Date("2027-07-01"),
-        quantity: 100,
       },
     });
 
-    // Seed Serials
-    await prisma.inventorySerial.deleteMany({ where: { inventoryId: inventory.id } });
+    // Serials
+    await prisma.inventorySerial.deleteMany({ where: { variantId: variant.id } });
     await prisma.inventorySerial.createMany({
       data: [
-        { inventoryId: inventory.id, serialNumber: "SN-IP17-001", status: "AVAILABLE" },
-        { inventoryId: inventory.id, serialNumber: "SN-IP17-002", status: "AVAILABLE" },
-        { inventoryId: inventory.id, serialNumber: "SN-IP17-003", status: "AVAILABLE" },
+        { variantId: variant.id, serialNumber: "SN-IP17-001", status: "AVAILABLE" },
+        { variantId: variant.id, serialNumber: "SN-IP17-002", status: "AVAILABLE" },
+        { variantId: variant.id, serialNumber: "SN-IP17-003", status: "AVAILABLE" },
       ],
     });
 
-    // Seed transaction ledger
-    await prisma.inventoryTransaction.deleteMany({
+    // Inventory at location
+    await prisma.inventoryLocation.deleteMany({
       where: {
-        variantId: variant.id,
-        warehouseId: mainWarehouse.id,
-        locationId: binA01_01.id,
-        type: "RECEIVE",
+        warehouseLocationId: warehouseLocation.id,
+        productVariantId: variant.id,
       },
     });
-    await prisma.inventoryTransaction.create({
+    await prisma.inventoryLocation.create({
       data: {
-        variantId: variant.id,
-        warehouseId: mainWarehouse.id,
-        locationId: binA01_01.id,
+        warehouseLocationId: warehouseLocation.id,
+        productVariantId: variant.id,
+        lotId: lot.id,
+        quantity: 100,
+        reservedQty: 20,
+        availableQty: 80,
+      },
+    });
+
+    // Movement ledger
+    await prisma.inventoryMovement.deleteMany({
+      where: { variantId: variant.id, referenceType: "INITIAL_SEED" },
+    });
+    await prisma.inventoryMovement.create({
+      data: {
         type: "RECEIVE",
+        variantId: variant.id,
+        toLocationId: warehouseLocation.id,
         quantity: 100,
         referenceType: "INITIAL_SEED",
-        createdBy: adminUser.id,
+        movedBy: adminUser.id,
       },
     });
   }

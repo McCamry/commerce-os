@@ -16,9 +16,12 @@ async function bootstrap() {
   app.enableCors(); // Enables CORS with default settings
 
   // Global standardizations
+  // NOTE: most DTOs are plain classes without class-validator decorators, so
+  // `whitelist: true` would strip every field. Keep it off until DTOs are
+  // annotated; `transform` still coerces bodies into DTO instances.
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
+      whitelist: false,
       transform: true,
       forbidNonWhitelisted: false,
     }),
