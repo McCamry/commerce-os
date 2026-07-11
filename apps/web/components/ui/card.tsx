@@ -1,0 +1,39 @@
+import * as React from 'react';
+import { cn } from '@/lib/utils';
+
+function Card({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div
+      className={cn(
+        'rounded-xl border bg-[var(--color-card)] text-[var(--color-card-foreground)] shadow-sm',
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
+  return <div className={cn('flex flex-col gap-1 p-6', className)} {...props} />;
+}
+
+function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div className={cn('font-semibold leading-none', className)} {...props} />
+  );
+}
+
+function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
+  return (
+    <div
+      className={cn('text-sm text-[var(--color-muted-foreground)]', className)}
+      {...props}
+    />
+  );
+}
+
+function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
+  return <div className={cn('p-6 pt-0', className)} {...props} />;
+}
+
+export { Card, CardHeader, CardTitle, CardDescription, CardContent };
