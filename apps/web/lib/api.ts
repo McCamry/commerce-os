@@ -19,6 +19,18 @@ export interface JwtClaims {
   orgId: string;
   username: string;
   roles: string[];
+  exp?: number;
+}
+
+export function isExpired(claims: JwtClaims | null): boolean {
+  return !!claims?.exp && claims.exp * 1000 <= Date.now();
+}
+
+function redirectToLogin() {
+  setToken(null);
+  if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+    window.location.href = '/login';
+  }
 }
 
 export function decodeToken(token: string): JwtClaims | null {
@@ -42,6 +54,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
       ...(options.headers ?? {}),
     },
   });
+
+  if (res.status === 401) {
+    redirectToLogin();
+    throw new Error('Session expired. Please sign in again.');
+  }
 
   const json = (await res.json().catch(() => null)) as
     | { success?: boolean; data?: T; error?: { message?: string } }

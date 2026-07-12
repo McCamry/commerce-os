@@ -5,6 +5,7 @@ import {
   api,
   decodeToken,
   getToken,
+  isExpired,
   setToken,
   type JwtClaims,
 } from '@/lib/api';
@@ -35,7 +36,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     const token = getToken();
-    if (token) setClaims(decodeToken(token));
+    const decoded = token ? decodeToken(token) : null;
+    if (decoded && !isExpired(decoded)) {
+      setClaims(decoded);
+    } else {
+      setToken(null);
+    }
     setReady(true);
   }, []);
 
