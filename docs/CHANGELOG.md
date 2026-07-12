@@ -21,6 +21,7 @@
 
 ### Changed
 - ESLint: relaxed type-checked `no-unsafe-*` and `no-floating-promises` rules for `*.spec.ts` files (jest matchers legitimately produce `any`).
+- Database migrations: squashed the five partial migrations into a single `0_init` baseline that matches the full schema, so the database is reproducible with `prisma migrate deploy`. Use `prisma migrate dev` for future schema changes instead of `db push`.
 
 ## v0.0.1
 
