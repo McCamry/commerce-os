@@ -2,6 +2,7 @@ import { Controller, Post, Body, Param, Headers, HttpCode } from '@nestjs/common
 import { PrismaService } from '../../../database/prisma.service';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { Public } from '../../../common/decorators/public.decorator';
 
 @Controller('marketplaces/webhooks')
 export class WebhooksController {
@@ -10,6 +11,7 @@ export class WebhooksController {
     @InjectQueue('marketplace_sync') private readonly syncQueue: Queue,
   ) {}
 
+  @Public()
   @Post(':connector')
   @HttpCode(200)
   async handleWebhook(

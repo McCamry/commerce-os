@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { PurchaseInvoicesService } from './purchase-invoices.service';
 import { CreatePurchaseInvoiceDto } from './dto/create-purchase-invoice.dto';
@@ -20,11 +21,18 @@ export class PurchaseInvoicesController {
 
   @Get()
   findAll(
+    @Query('organizationId') organizationId: string,
     @Query('vendorId') vendorId?: string,
     @Query('purchaseOrderId') purchaseOrderId?: string,
     @Query('status') status?: string,
   ) {
+    if (!organizationId) {
+      throw new BadRequestException(
+        'organizationId query parameter is required',
+      );
+    }
     return this.purchaseInvoicesService.findAll({
+      organizationId,
       vendorId,
       purchaseOrderId,
       status,

@@ -16,8 +16,15 @@ import { UpdateSalesInvoiceDto } from './dto/update-sales-invoice.dto';
 export class SalesInvoicesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(filter: { salesOrderId?: string; status?: string }) {
-    const whereClause: Prisma.SalesInvoiceWhereInput = { deletedAt: null };
+  findAll(filter: {
+    organizationId: string;
+    salesOrderId?: string;
+    status?: string;
+  }) {
+    const whereClause: Prisma.SalesInvoiceWhereInput = {
+      deletedAt: null,
+      salesOrder: { organizationId: filter.organizationId },
+    };
 
     if (filter.salesOrderId) {
       whereClause.salesOrderId = filter.salesOrderId;

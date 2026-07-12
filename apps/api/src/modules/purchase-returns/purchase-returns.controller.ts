@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { PurchaseReturnsService } from './purchase-returns.service';
 import { CreatePurchaseReturnDto } from './dto/create-purchase-return.dto';
@@ -20,10 +21,20 @@ export class PurchaseReturnsController {
 
   @Get()
   findAll(
+    @Query('organizationId') organizationId: string,
     @Query('vendorId') vendorId?: string,
     @Query('status') status?: string,
   ) {
-    return this.purchaseReturnsService.findAll({ vendorId, status });
+    if (!organizationId) {
+      throw new BadRequestException(
+        'organizationId query parameter is required',
+      );
+    }
+    return this.purchaseReturnsService.findAll({
+      organizationId,
+      vendorId,
+      status,
+    });
   }
 
   @Get(':id')

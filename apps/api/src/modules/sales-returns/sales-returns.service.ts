@@ -16,8 +16,15 @@ import { UpdateSalesReturnDto } from './dto/update-sales-return.dto';
 export class SalesReturnsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(filter: { salesOrderId?: string; status?: string }) {
-    const whereClause: Prisma.SalesReturnWhereInput = { deletedAt: null };
+  findAll(filter: {
+    organizationId: string;
+    salesOrderId?: string;
+    status?: string;
+  }) {
+    const whereClause: Prisma.SalesReturnWhereInput = {
+      deletedAt: null,
+      salesOrder: { organizationId: filter.organizationId },
+    };
 
     if (filter.salesOrderId) {
       whereClause.salesOrderId = filter.salesOrderId;

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { PurchaseInvoicesController } from './purchase-invoices.controller';
 import { PurchaseInvoicesService } from './purchase-invoices.service';
 
@@ -27,9 +28,16 @@ describe('PurchaseInvoicesController', () => {
     expect(controller).toBeDefined();
   });
 
+  it('requires organizationId on findAll', () => {
+    expect(() => controller.findAll(undefined as unknown as string)).toThrow(
+      BadRequestException,
+    );
+  });
+
   it('forwards findAll filters to the service', () => {
-    controller.findAll('vendor-1', 'po-1', 'PENDING');
+    controller.findAll('org-1', 'vendor-1', 'po-1', 'PENDING');
     expect(service.findAll).toHaveBeenCalledWith({
+      organizationId: 'org-1',
       vendorId: 'vendor-1',
       purchaseOrderId: 'po-1',
       status: 'PENDING',

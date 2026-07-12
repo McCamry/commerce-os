@@ -70,10 +70,19 @@ describe('PurchaseInvoicesService', () => {
 
   it('filters findAll by vendor and excludes soft-deleted rows', () => {
     prisma.purchaseInvoice.findMany.mockResolvedValue([]);
-    service.findAll({ vendorId: 'vendor-1', status: 'PENDING' });
+    service.findAll({
+      organizationId: 'org-1',
+      vendorId: 'vendor-1',
+      status: 'PENDING',
+    });
     expect(prisma.purchaseInvoice.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { deletedAt: null, vendorId: 'vendor-1', status: 'PENDING' },
+        where: {
+          deletedAt: null,
+          vendor: { organizationId: 'org-1' },
+          vendorId: 'vendor-1',
+          status: 'PENDING',
+        },
       }),
     );
   });

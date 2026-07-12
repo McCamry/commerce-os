@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Security
+- Enforce authentication globally: registered `JwtAuthGuard` as an `APP_GUARD`, with a `@Public()` decorator to opt out (login/refresh/logout, health check, marketplace webhooks). Previously only a couple of controllers were guarded.
+- Scope the non-org-scoped list endpoints to a tenant: `purchase-invoices`, `purchase-returns`, `sales-invoices`, `sales-returns`, and `receipts` now require an `organizationId` query param and filter through their parent relation (vendor/salesOrder/salesInvoice), preventing cross-organization data exposure.
+
 ### Added
 - Customers module: full CRUD REST API (`/customers`), organization-scoped with soft delete.
 - Vendors module: full CRUD REST API (`/vendors`), organization-scoped with soft delete.

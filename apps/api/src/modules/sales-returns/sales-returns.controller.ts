@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { SalesReturnsService } from './sales-returns.service';
 import { CreateSalesReturnDto } from './dto/create-sales-return.dto';
@@ -18,10 +19,20 @@ export class SalesReturnsController {
 
   @Get()
   findAll(
+    @Query('organizationId') organizationId: string,
     @Query('salesOrderId') salesOrderId?: string,
     @Query('status') status?: string,
   ) {
-    return this.salesReturnsService.findAll({ salesOrderId, status });
+    if (!organizationId) {
+      throw new BadRequestException(
+        'organizationId query parameter is required',
+      );
+    }
+    return this.salesReturnsService.findAll({
+      organizationId,
+      salesOrderId,
+      status,
+    });
   }
 
   @Get(':id')

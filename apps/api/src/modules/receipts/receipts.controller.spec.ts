@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
 import { ReceiptsController } from './receipts.controller';
 import { ReceiptsService } from './receipts.service';
 
@@ -26,11 +27,18 @@ describe('ReceiptsController', () => {
   });
 
   it('forwards findAll filters to the service', () => {
-    controller.findAll('si-1', 'COMPLETED');
+    controller.findAll('org-1', 'si-1', 'COMPLETED');
     expect(service.findAll).toHaveBeenCalledWith({
+      organizationId: 'org-1',
       salesInvoiceId: 'si-1',
       status: 'COMPLETED',
     });
+  });
+
+  it('requires organizationId on findAll', () => {
+    expect(() => controller.findAll(undefined as unknown as string)).toThrow(
+      BadRequestException,
+    );
   });
 
   it('delegates create to the service', () => {

@@ -39,10 +39,14 @@ describe('ReceiptsService', () => {
 
   it('filters findAll by sales invoice and excludes soft-deleted rows', () => {
     prisma.receipt.findMany.mockResolvedValue([]);
-    service.findAll({ salesInvoiceId: 'si-1' });
+    service.findAll({ organizationId: 'org-1', salesInvoiceId: 'si-1' });
     expect(prisma.receipt.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { deletedAt: null, salesInvoiceId: 'si-1' },
+        where: {
+          deletedAt: null,
+          salesInvoice: { salesOrder: { organizationId: 'org-1' } },
+          salesInvoiceId: 'si-1',
+        },
       }),
     );
   });

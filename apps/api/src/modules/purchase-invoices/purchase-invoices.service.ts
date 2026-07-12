@@ -17,11 +17,15 @@ export class PurchaseInvoicesService {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll(filter: {
+    organizationId: string;
     vendorId?: string;
     purchaseOrderId?: string;
     status?: string;
   }) {
-    const whereClause: Prisma.PurchaseInvoiceWhereInput = { deletedAt: null };
+    const whereClause: Prisma.PurchaseInvoiceWhereInput = {
+      deletedAt: null,
+      vendor: { organizationId: filter.organizationId },
+    };
 
     if (filter.vendorId) {
       whereClause.vendorId = filter.vendorId;

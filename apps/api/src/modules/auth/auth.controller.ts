@@ -5,11 +5,13 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshDto } from './dto/refresh.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Public()
   @Post('login')
   login(@Body() dto: LoginDto, @Req() req: Request) {
     const ip = req.ip || req.socket.remoteAddress;
@@ -17,6 +19,7 @@ export class AuthController {
     return this.authService.login(dto, ip, userAgent);
   }
 
+  @Public()
   @Post('refresh')
   refresh(@Body() dto: RefreshDto, @Req() req: Request) {
     const ip = req.ip || req.socket.remoteAddress;
@@ -24,6 +27,7 @@ export class AuthController {
     return this.authService.refresh(dto.refreshToken, ip, userAgent);
   }
 
+  @Public()
   @Post('logout')
   logout(@Body() dto: RefreshDto) {
     return this.authService.logout(dto.refreshToken);

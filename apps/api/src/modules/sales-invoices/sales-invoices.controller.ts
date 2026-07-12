@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { SalesInvoicesService } from './sales-invoices.service';
 import { CreateSalesInvoiceDto } from './dto/create-sales-invoice.dto';
@@ -18,10 +19,20 @@ export class SalesInvoicesController {
 
   @Get()
   findAll(
+    @Query('organizationId') organizationId: string,
     @Query('salesOrderId') salesOrderId?: string,
     @Query('status') status?: string,
   ) {
-    return this.salesInvoicesService.findAll({ salesOrderId, status });
+    if (!organizationId) {
+      throw new BadRequestException(
+        'organizationId query parameter is required',
+      );
+    }
+    return this.salesInvoicesService.findAll({
+      organizationId,
+      salesOrderId,
+      status,
+    });
   }
 
   @Get(':id')

@@ -16,8 +16,15 @@ import { UpdatePurchaseReturnDto } from './dto/update-purchase-return.dto';
 export class PurchaseReturnsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(filter: { vendorId?: string; status?: string }) {
-    const whereClause: Prisma.PurchaseReturnWhereInput = { deletedAt: null };
+  findAll(filter: {
+    organizationId: string;
+    vendorId?: string;
+    status?: string;
+  }) {
+    const whereClause: Prisma.PurchaseReturnWhereInput = {
+      deletedAt: null,
+      vendor: { organizationId: filter.organizationId },
+    };
 
     if (filter.vendorId) {
       whereClause.vendorId = filter.vendorId;
