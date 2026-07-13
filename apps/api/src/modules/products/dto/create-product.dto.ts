@@ -11,10 +11,6 @@ import {
 export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
-  organizationId!: string;
-
-  @IsString()
-  @IsNotEmpty()
   categoryId!: string;
 
   @IsOptional()

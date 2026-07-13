@@ -51,7 +51,7 @@ describe('PriceBooksService', () => {
 
   it('defaults currency to THB and status to ACTIVE on create', async () => {
     prisma.priceBook.create.mockResolvedValue({ id: 'pb-1' });
-    await service.create({ organizationId: 'org-1', code: 'PB1', name: 'Std' });
+    await service.create({ code: 'PB1', name: 'Std' }, 'org-1');
     expect(prisma.priceBook.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ currency: 'THB', status: 'ACTIVE' }),
@@ -67,7 +67,7 @@ describe('PriceBooksService', () => {
       }),
     );
     await expect(
-      service.create({ organizationId: 'org-1', code: 'PB1', name: 'Std' }),
+      service.create({ code: 'PB1', name: 'Std' }, 'org-1'),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 

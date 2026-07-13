@@ -41,11 +41,11 @@ export class VendorsService {
     return vendor;
   }
 
-  async create(dto: CreateVendorDto) {
+  async create(dto: CreateVendorDto, organizationId: string) {
     try {
       return await this.prisma.vendor.create({
         data: {
-          organizationId: dto.organizationId,
+          organizationId,
           code: dto.code,
           name: dto.name,
           taxId: dto.taxId,

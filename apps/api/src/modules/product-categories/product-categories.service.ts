@@ -63,11 +63,11 @@ export class ProductCategoriesService {
     return category;
   }
 
-  async create(dto: CreateProductCategoryDto) {
+  async create(dto: CreateProductCategoryDto, organizationId: string) {
     try {
       return await this.prisma.productCategory.create({
         data: {
-          organizationId: dto.organizationId,
+          organizationId,
           parentId: dto.parentId || null,
           code: dto.code,
           name: dto.name,

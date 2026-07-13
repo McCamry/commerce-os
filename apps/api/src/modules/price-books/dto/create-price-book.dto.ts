@@ -13,10 +13,6 @@ export class CreatePriceBookItemDto {
 }
 
 export class CreatePriceBookDto {
-  @IsString()
-  @IsNotEmpty()
-  organizationId!: string;
-
   @IsOptional()
   @IsString()
   customerGroupId?: string;

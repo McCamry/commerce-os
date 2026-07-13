@@ -34,8 +34,11 @@ export class TaxesController {
   }
 
   @Post()
-  create(@Body() dto: CreateTaxDto) {
-    return this.taxesService.create(dto);
+  create(
+    @Body() dto: CreateTaxDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.taxesService.create(dto, organizationId);
   }
 
   @Patch(':id')

@@ -10,10 +10,6 @@ export class CreatePurchaseRequestItemDto {
 export class CreatePurchaseRequestDto {
   @IsString()
   @IsNotEmpty()
-  organizationId!: string;
-
-  @IsString()
-  @IsNotEmpty()
   storeId!: string;
 
   @IsString()

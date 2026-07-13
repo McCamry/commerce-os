@@ -34,8 +34,11 @@ export class WarehousesController {
   }
 
   @Post()
-  create(@Body() dto: CreateWarehouseDto) {
-    return this.warehousesService.create(dto);
+  create(
+    @Body() dto: CreateWarehouseDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.warehousesService.create(dto, organizationId);
   }
 
   @Patch(':id')

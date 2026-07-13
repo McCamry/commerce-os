@@ -41,8 +41,11 @@ export class PurchaseRequestsController {
   }
 
   @Post()
-  create(@Body() dto: CreatePurchaseRequestDto) {
-    return this.purchaseRequestsService.create(dto);
+  create(
+    @Body() dto: CreatePurchaseRequestDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.purchaseRequestsService.create(dto, organizationId);
   }
 
   @Patch(':id')

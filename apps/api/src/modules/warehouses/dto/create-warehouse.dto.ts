@@ -3,10 +3,6 @@ import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateWarehouseDto {
   @IsString()
   @IsNotEmpty()
-  organizationId: string;
-
-  @IsString()
-  @IsNotEmpty()
   storeId: string;
 
   @IsString()

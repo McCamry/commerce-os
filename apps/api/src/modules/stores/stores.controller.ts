@@ -30,8 +30,11 @@ export class StoresController {
   }
 
   @Post()
-  create(@Body() dto: CreateStoreDto) {
-    return this.storesService.create(dto);
+  create(
+    @Body() dto: CreateStoreDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.storesService.create(dto, organizationId);
   }
 
   @Patch(':id')

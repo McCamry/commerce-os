@@ -18,7 +18,6 @@ describe('QuotationsService', () => {
   };
 
   const baseDto: CreateQuotationDto = {
-    organizationId: 'org-1',
     storeId: 'store-1',
     customerId: 'cust-1',
     quotationNo: 'QT-001',
@@ -69,12 +68,12 @@ describe('QuotationsService', () => {
   describe('create', () => {
     it('rejects a quotation with no items', async () => {
       await expect(
-        service.create({ ...baseDto, items: [] }),
+        service.create({ ...baseDto, items: [] }, 'org-1'),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
     it('computes header totals and per-line totals', async () => {
-      await service.create(baseDto);
+      await service.create(baseDto, 'org-1');
 
       const arg = prisma.quotation.create.mock.calls[0][0];
       // subtotal = 2*100 + 1*50 = 250; discount = 5; vat = 200*7% = 14
@@ -89,7 +88,7 @@ describe('QuotationsService', () => {
     });
 
     it('defaults status to DRAFT', async () => {
-      await service.create(baseDto);
+      await service.create(baseDto, 'org-1');
 
       const arg = prisma.quotation.create.mock.calls[0][0];
       expect(arg.data.status).toBe('DRAFT');

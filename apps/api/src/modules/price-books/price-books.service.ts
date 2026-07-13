@@ -53,11 +53,11 @@ export class PriceBooksService {
     return priceBook;
   }
 
-  async create(dto: CreatePriceBookDto) {
+  async create(dto: CreatePriceBookDto, organizationId: string) {
     try {
       return await this.prisma.priceBook.create({
         data: {
-          organizationId: dto.organizationId,
+          organizationId,
           customerGroupId: dto.customerGroupId,
           code: dto.code,
           name: dto.name,

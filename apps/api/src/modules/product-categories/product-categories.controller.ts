@@ -35,8 +35,11 @@ export class ProductCategoriesController {
   }
 
   @Post()
-  create(@Body() dto: CreateProductCategoryDto) {
-    return this.categoriesService.create(dto);
+  create(
+    @Body() dto: CreateProductCategoryDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.categoriesService.create(dto, organizationId);
   }
 
   @Patch(':id')

@@ -12,10 +12,6 @@ export class CreateQuotationItemDto {
 export class CreateQuotationDto {
   @IsString()
   @IsNotEmpty()
-  organizationId!: string;
-
-  @IsString()
-  @IsNotEmpty()
   storeId!: string;
 
   @IsString()

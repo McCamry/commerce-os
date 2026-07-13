@@ -78,14 +78,17 @@ export class UsersService {
     return this.sanitizeUser(user as unknown as Record<string, unknown>);
   }
 
-  async create(dto: CreateUserDto): Promise<Record<string, unknown>> {
+  async create(
+    dto: CreateUserDto,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
     const passwordHash = bcrypt.hashSync(dto.password, 10);
 
     try {
       const user = await this.prisma.$transaction(async (tx) => {
         const u = await tx.user.create({
           data: {
-            organizationId: dto.organizationId,
+            organizationId,
             username: dto.username,
             email: dto.email,
             phone: dto.phone || null,

@@ -51,11 +51,11 @@ export class TaxesService {
     };
   }
 
-  async create(dto: CreateTaxDto) {
+  async create(dto: CreateTaxDto, organizationId: string) {
     try {
       const tax = await this.prisma.tax.create({
         data: {
-          organizationId: dto.organizationId,
+          organizationId,
           code: dto.code,
           name: dto.name,
           rate: new Prisma.Decimal(dto.rate),

@@ -40,11 +40,11 @@ export class BrandsService {
     return brand;
   }
 
-  async create(dto: CreateBrandDto) {
+  async create(dto: CreateBrandDto, organizationId: string) {
     try {
       return await this.prisma.brand.create({
         data: {
-          organizationId: dto.organizationId,
+          organizationId,
           code: dto.code,
           name: dto.name,
           logo: dto.logo,

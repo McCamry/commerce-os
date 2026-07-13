@@ -12,6 +12,7 @@ import {
 import { RolesPermissionsService } from './roles-permissions.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller()
 export class RolesPermissionsController {
@@ -41,8 +42,11 @@ export class RolesPermissionsController {
   }
 
   @Post('roles')
-  createRole(@Body() dto: CreateRoleDto) {
-    return this.service.createRole(dto);
+  createRole(
+    @Body() dto: CreateRoleDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.service.createRole(dto, organizationId);
   }
 
   @Patch('roles/:id')

@@ -50,8 +50,11 @@ export class ProductsController {
   }
 
   @Post()
-  create(@Body() dto: CreateProductDto) {
-    return this.productsService.create(dto);
+  create(
+    @Body() dto: CreateProductDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.productsService.create(dto, organizationId);
   }
 
   @Patch(':id')

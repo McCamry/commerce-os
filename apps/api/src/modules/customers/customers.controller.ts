@@ -39,8 +39,11 @@ export class CustomersController {
   }
 
   @Post()
-  create(@Body() dto: CreateCustomerDto) {
-    return this.customersService.create(dto);
+  create(
+    @Body() dto: CreateCustomerDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.customersService.create(dto, organizationId);
   }
 
   @Patch(':id')

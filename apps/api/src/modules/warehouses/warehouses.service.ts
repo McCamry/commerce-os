@@ -45,7 +45,10 @@ export class WarehousesService {
     return wh as unknown as Record<string, unknown>;
   }
 
-  async create(dto: CreateWarehouseDto): Promise<Record<string, unknown>> {
+  async create(
+    dto: CreateWarehouseDto,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
     try {
       const created = await this.prisma.$transaction(async (tx) => {
         if (dto.isDefault) {
@@ -58,7 +61,7 @@ export class WarehousesService {
 
         return await tx.warehouse.create({
           data: {
-            organizationId: dto.organizationId,
+            organizationId,
             storeId: dto.storeId,
             code: dto.code.toUpperCase(),
             name: dto.name,

@@ -3,10 +3,6 @@ import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 export class CreateUnitDto {
   @IsString()
   @IsNotEmpty()
-  organizationId!: string;
-
-  @IsString()
-  @IsNotEmpty()
   code!: string;
 
   @IsString()

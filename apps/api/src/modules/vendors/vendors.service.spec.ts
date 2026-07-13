@@ -80,11 +80,13 @@ describe('VendorsService', () => {
     it('defaults creditDays to 0 and status to ACTIVE', async () => {
       prisma.vendor.create.mockResolvedValue({ id: 'v-1' });
 
-      await service.create({
-        organizationId: 'org-1',
-        code: 'VEND001',
-        name: 'Supplier Co',
-      });
+      await service.create(
+        {
+          code: 'VEND001',
+          name: 'Supplier Co',
+        },
+        'org-1',
+      );
 
       expect(prisma.vendor.create).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -102,7 +104,7 @@ describe('VendorsService', () => {
       );
 
       await expect(
-        service.create({ organizationId: 'org-1', code: 'VEND001', name: 'A' }),
+        service.create({ code: 'VEND001', name: 'A' }, 'org-1'),
       ).rejects.toBeInstanceOf(ConflictException);
     });
   });

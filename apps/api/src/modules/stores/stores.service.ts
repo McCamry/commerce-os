@@ -33,11 +33,11 @@ export class StoresService {
     return store;
   }
 
-  async create(dto: CreateStoreDto) {
+  async create(dto: CreateStoreDto, organizationId: string) {
     try {
       return await this.prisma.store.create({
         data: {
-          organizationId: dto.organizationId,
+          organizationId,
           code: dto.code,
           name: dto.name,
           slug: dto.slug,

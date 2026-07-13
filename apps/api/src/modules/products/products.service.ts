@@ -137,13 +137,16 @@ export class ProductsService {
     );
   }
 
-  async create(dto: CreateProductDto): Promise<Record<string, unknown>> {
+  async create(
+    dto: CreateProductDto,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
     try {
       return await this.prisma.$transaction(async (tx) => {
         // Create product master
         const product = await tx.product.create({
           data: {
-            organizationId: dto.organizationId,
+            organizationId,
             categoryId: dto.categoryId,
             brandId: dto.brandId || null,
             unitId: dto.unitId,

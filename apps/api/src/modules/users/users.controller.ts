@@ -12,6 +12,7 @@ import {
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -36,8 +37,11 @@ export class UsersController {
   }
 
   @Post()
-  create(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+  create(
+    @Body() dto: CreateUserDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.usersService.create(dto, organizationId);
   }
 
   @Patch(':id')

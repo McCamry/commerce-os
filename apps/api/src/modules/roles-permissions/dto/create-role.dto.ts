@@ -3,10 +3,6 @@ import { IsArray, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 export class CreateRoleDto {
   @IsString()
   @IsNotEmpty()
-  organizationId: string;
-
-  @IsString()
-  @IsNotEmpty()
   code: string;
 
   @IsString()

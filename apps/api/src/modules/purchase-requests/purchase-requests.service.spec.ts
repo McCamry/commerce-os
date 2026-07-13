@@ -26,7 +26,6 @@ describe('PurchaseRequestsService', () => {
   });
 
   const baseDto = {
-    organizationId: 'org-1',
     storeId: 'store-1',
     requestNo: 'PR-001',
     requestBy: 'user-1',
@@ -49,13 +48,13 @@ describe('PurchaseRequestsService', () => {
 
   it('rejects a request with no items', async () => {
     await expect(
-      service.create({ ...baseDto, items: [] }),
+      service.create({ ...baseDto, items: [] }, 'org-1'),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('defaults status to DRAFT on create', async () => {
     prisma.purchaseRequest.create.mockResolvedValue({ id: 'pr-1' });
-    await service.create(baseDto);
+    await service.create(baseDto, 'org-1');
     expect(prisma.purchaseRequest.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ status: 'DRAFT' }),

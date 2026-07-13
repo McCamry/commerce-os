@@ -54,7 +54,7 @@ export class PurchaseRequestsService {
     return request;
   }
 
-  async create(dto: CreatePurchaseRequestDto) {
+  async create(dto: CreatePurchaseRequestDto, organizationId: string) {
     if (!dto.items || dto.items.length === 0) {
       throw new BadRequestException(
         'Purchase request must contain at least one item',
@@ -64,7 +64,7 @@ export class PurchaseRequestsService {
     try {
       return await this.prisma.purchaseRequest.create({
         data: {
-          organizationId: dto.organizationId,
+          organizationId,
           storeId: dto.storeId,
           requestNo: dto.requestNo,
           requestBy: dto.requestBy,

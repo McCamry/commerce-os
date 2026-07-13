@@ -59,7 +59,7 @@ export class QuotationsService {
     return quotation;
   }
 
-  async create(dto: CreateQuotationDto) {
+  async create(dto: CreateQuotationDto, organizationId: string) {
     if (!dto.items || dto.items.length === 0) {
       throw new BadRequestException('Quotation must contain at least one item');
     }
@@ -69,7 +69,7 @@ export class QuotationsService {
     try {
       return await this.prisma.quotation.create({
         data: {
-          organizationId: dto.organizationId,
+          organizationId,
           storeId: dto.storeId,
           customerId: dto.customerId,
           quotationNo: dto.quotationNo,

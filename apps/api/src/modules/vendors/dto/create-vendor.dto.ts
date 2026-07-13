@@ -9,10 +9,6 @@ import {
 export class CreateVendorDto {
   @IsString()
   @IsNotEmpty()
-  organizationId!: string;
-
-  @IsString()
-  @IsNotEmpty()
   code!: string;
 
   @IsString()

@@ -34,8 +34,11 @@ export class VendorsController {
   }
 
   @Post()
-  create(@Body() dto: CreateVendorDto) {
-    return this.vendorsService.create(dto);
+  create(
+    @Body() dto: CreateVendorDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.vendorsService.create(dto, organizationId);
   }
 
   @Patch(':id')

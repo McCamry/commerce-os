@@ -43,9 +43,9 @@ describe('VendorsController', () => {
   });
 
   it('delegates create to the service', () => {
-    const dto = { organizationId: 'org-1', code: 'V1', name: 'Supplier' };
-    controller.create(dto);
+    const dto = { code: 'V1', name: 'Supplier' };
+    controller.create(dto, 'org-1');
 
-    expect(service.create).toHaveBeenCalledWith(dto);
+    expect(service.create).toHaveBeenCalledWith(dto, 'org-1');
   });
 });

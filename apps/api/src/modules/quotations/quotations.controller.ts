@@ -41,8 +41,11 @@ export class QuotationsController {
   }
 
   @Post()
-  create(@Body() dto: CreateQuotationDto) {
-    return this.quotationsService.create(dto);
+  create(
+    @Body() dto: CreateQuotationDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.quotationsService.create(dto, organizationId);
   }
 
   @Patch(':id')

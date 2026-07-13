@@ -39,8 +39,11 @@ export class PriceBooksController {
   }
 
   @Post()
-  create(@Body() dto: CreatePriceBookDto) {
-    return this.priceBooksService.create(dto);
+  create(
+    @Body() dto: CreatePriceBookDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.priceBooksService.create(dto, organizationId);
   }
 
   @Patch(':id')

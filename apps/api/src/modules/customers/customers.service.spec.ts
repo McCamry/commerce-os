@@ -101,15 +101,21 @@ describe('CustomersService', () => {
     it('defaults creditDays to 0 and status to ACTIVE', async () => {
       prisma.customer.create.mockResolvedValue({ id: 'c-1' });
 
-      await service.create({
-        organizationId: 'org-1',
-        code: 'CUST001',
-        name: 'ACME',
-      });
+      await service.create(
+        {
+          code: 'CUST001',
+          name: 'ACME',
+        },
+        'org-1',
+      );
 
       expect(prisma.customer.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          data: expect.objectContaining({ creditDays: 0, status: 'ACTIVE' }),
+          data: expect.objectContaining({
+            creditDays: 0,
+            status: 'ACTIVE',
+            organizationId: 'org-1',
+          }),
         }),
       );
     });
@@ -123,7 +129,7 @@ describe('CustomersService', () => {
       );
 
       await expect(
-        service.create({ organizationId: 'org-1', code: 'CUST001', name: 'A' }),
+        service.create({ code: 'CUST001', name: 'A' }, 'org-1'),
       ).rejects.toBeInstanceOf(ConflictException);
     });
   });

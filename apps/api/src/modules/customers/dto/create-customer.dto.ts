@@ -7,10 +7,6 @@ import {
 } from 'class-validator';
 
 export class CreateCustomerDto {
-  @IsString()
-  @IsNotEmpty()
-  organizationId!: string;
-
   @IsOptional()
   @IsString()
   customerGroupId?: string;

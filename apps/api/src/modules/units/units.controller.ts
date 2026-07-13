@@ -34,8 +34,11 @@ export class UnitsController {
   }
 
   @Post()
-  create(@Body() dto: CreateUnitDto) {
-    return this.unitsService.create(dto);
+  create(
+    @Body() dto: CreateUnitDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.unitsService.create(dto, organizationId);
   }
 
   @Patch(':id')

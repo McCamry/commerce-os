@@ -44,9 +44,9 @@ describe('CustomersController', () => {
   });
 
   it('delegates create to the service', () => {
-    const dto = { organizationId: 'org-1', code: 'C1', name: 'A' };
-    controller.create(dto);
+    const dto = { code: 'C1', name: 'A' };
+    controller.create(dto, 'org-1');
 
-    expect(service.create).toHaveBeenCalledWith(dto);
+    expect(service.create).toHaveBeenCalledWith(dto, 'org-1');
   });
 });

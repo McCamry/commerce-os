@@ -46,14 +46,13 @@ describe('QuotationsController', () => {
 
   it('delegates create to the service', () => {
     const dto = {
-      organizationId: 'org-1',
       storeId: 's-1',
       customerId: 'c-1',
       quotationNo: 'QT-1',
       items: [],
     };
-    controller.create(dto);
+    controller.create(dto, 'org-1');
 
-    expect(service.create).toHaveBeenCalledWith(dto);
+    expect(service.create).toHaveBeenCalledWith(dto, 'org-1');
   });
 });

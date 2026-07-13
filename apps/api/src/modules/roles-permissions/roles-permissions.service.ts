@@ -66,12 +66,15 @@ export class RolesPermissionsService {
     return role as unknown as Record<string, unknown>;
   }
 
-  async createRole(dto: CreateRoleDto): Promise<Record<string, unknown>> {
+  async createRole(
+    dto: CreateRoleDto,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
     try {
       const created = await this.prisma.$transaction(async (tx) => {
         const role = await tx.role.create({
           data: {
-            organizationId: dto.organizationId,
+            organizationId,
             code: dto.code.toUpperCase(),
             name: dto.name,
             description: dto.description || null,

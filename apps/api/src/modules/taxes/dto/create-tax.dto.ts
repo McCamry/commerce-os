@@ -9,10 +9,6 @@ import {
 export class CreateTaxDto {
   @IsString()
   @IsNotEmpty()
-  organizationId!: string;
-
-  @IsString()
-  @IsNotEmpty()
   code!: string;
 
   @IsString()

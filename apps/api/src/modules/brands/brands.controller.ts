@@ -34,8 +34,11 @@ export class BrandsController {
   }
 
   @Post()
-  create(@Body() dto: CreateBrandDto) {
-    return this.brandsService.create(dto);
+  create(
+    @Body() dto: CreateBrandDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.brandsService.create(dto, organizationId);
   }
 
   @Patch(':id')

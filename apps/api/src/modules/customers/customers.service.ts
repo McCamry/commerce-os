@@ -50,11 +50,11 @@ export class CustomersService {
     return customer;
   }
 
-  async create(dto: CreateCustomerDto) {
+  async create(dto: CreateCustomerDto, organizationId: string) {
     try {
       return await this.prisma.customer.create({
         data: {
-          organizationId: dto.organizationId,
+          organizationId,
           customerGroupId: dto.customerGroupId,
           code: dto.code,
           name: dto.name,
