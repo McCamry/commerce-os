@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { SalesInvoicesService } from './sales-invoices.service';
 import { CreateSalesInvoiceDto } from './dto/create-sales-invoice.dto';
 import { UpdateSalesInvoiceDto } from './dto/update-sales-invoice.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('sales-invoices')
 export class SalesInvoicesController {
@@ -19,15 +19,10 @@ export class SalesInvoicesController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('salesOrderId') salesOrderId?: string,
     @Query('status') status?: string,
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.salesInvoicesService.findAll({
       organizationId,
       salesOrderId,
@@ -36,8 +31,11 @@ export class SalesInvoicesController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.salesInvoicesService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.salesInvoicesService.findOne(id, organizationId);
   }
 
   @Post()
@@ -46,12 +44,19 @@ export class SalesInvoicesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateSalesInvoiceDto) {
-    return this.salesInvoicesService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateSalesInvoiceDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.salesInvoicesService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.salesInvoicesService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.salesInvoicesService.remove(id, organizationId);
   }
 }

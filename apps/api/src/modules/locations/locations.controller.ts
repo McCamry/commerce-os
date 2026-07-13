@@ -12,22 +12,29 @@ import {
 import { LocationsService } from './locations.service';
 import { CreateLocationDto } from './dto/create-location.dto';
 import { UpdateLocationDto } from './dto/update-location.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('locations')
 export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @Get()
-  findAll(@Query('warehouseId') warehouseId: string) {
+  findAll(
+    @CurrentUser('organizationId') organizationId: string,
+    @Query('warehouseId') warehouseId: string,
+  ) {
     if (!warehouseId) {
       throw new BadRequestException('warehouseId query parameter is required');
     }
-    return this.locationsService.findAll({ warehouseId });
+    return this.locationsService.findAll({ warehouseId, organizationId });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.locationsService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.locationsService.findOne(id, organizationId);
   }
 
   @Post()
@@ -36,12 +43,19 @@ export class LocationsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateLocationDto) {
-    return this.locationsService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateLocationDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.locationsService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.locationsService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.locationsService.remove(id, organizationId);
   }
 }

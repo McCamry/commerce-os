@@ -40,9 +40,9 @@ export class PriceBooksService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const priceBook = await this.prisma.priceBook.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
       include: this.priceBookRelations(),
     });
 
@@ -77,8 +77,8 @@ export class PriceBooksService {
     }
   }
 
-  async update(id: string, dto: UpdatePriceBookDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdatePriceBookDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     const data: Prisma.PriceBookUpdateInput = {
       customerGroup: dto.customerGroupId
@@ -124,8 +124,8 @@ export class PriceBooksService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.priceBook.update({
       where: { id },

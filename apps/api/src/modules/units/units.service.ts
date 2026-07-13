@@ -28,9 +28,9 @@ export class UnitsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const unit = await this.prisma.unit.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
     });
 
     if (!unit) {
@@ -56,8 +56,8 @@ export class UnitsService {
     }
   }
 
-  async update(id: string, dto: UpdateUnitDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateUnitDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     try {
       return await this.prisma.unit.update({
@@ -74,8 +74,8 @@ export class UnitsService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.unit.update({
       where: { id },

@@ -44,7 +44,7 @@ describe('PriceBooksService', () => {
 
   it('throws NotFoundException when a price book is missing', async () => {
     prisma.priceBook.findFirst.mockResolvedValue(null);
-    await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+    await expect(service.findOne('missing', 'org-1')).rejects.toBeInstanceOf(
       NotFoundException,
     );
   });
@@ -74,7 +74,7 @@ describe('PriceBooksService', () => {
   it('soft-deletes by setting status INACTIVE and deletedAt', async () => {
     prisma.priceBook.findFirst.mockResolvedValue({ id: 'pb-1' });
     prisma.priceBook.update.mockResolvedValue({ id: 'pb-1' });
-    await service.remove('pb-1');
+    await service.remove('pb-1', 'org-1');
     expect(prisma.priceBook.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({

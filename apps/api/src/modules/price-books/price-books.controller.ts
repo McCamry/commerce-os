@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { PriceBooksService } from './price-books.service';
 import { CreatePriceBookDto } from './dto/create-price-book.dto';
 import { UpdatePriceBookDto } from './dto/update-price-book.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('price-books')
 export class PriceBooksController {
@@ -19,15 +19,10 @@ export class PriceBooksController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('customerGroupId') customerGroupId?: string,
     @Query('status') status?: 'ACTIVE' | 'INACTIVE',
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.priceBooksService.findAll({
       organizationId,
       customerGroupId,
@@ -36,8 +31,11 @@ export class PriceBooksController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.priceBooksService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.priceBooksService.findOne(id, organizationId);
   }
 
   @Post()
@@ -46,12 +44,19 @@ export class PriceBooksController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdatePriceBookDto) {
-    return this.priceBooksService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdatePriceBookDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.priceBooksService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.priceBooksService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.priceBooksService.remove(id, organizationId);
   }
 }

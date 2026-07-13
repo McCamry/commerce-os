@@ -12,17 +12,17 @@ import { UpdateStoreDto } from './dto/update-store.dto';
 export class StoresService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll() {
+  findAll(organizationId: string) {
     return this.prisma.store.findMany({
-      where: { deletedAt: null },
+      where: { organizationId, deletedAt: null },
       orderBy: [{ name: 'asc' }],
       include: this.storeRelations(),
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const store = await this.prisma.store.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
       include: this.storeRelations(),
     });
 
@@ -63,8 +63,8 @@ export class StoresService {
     }
   }
 
-  async update(id: string, dto: UpdateStoreDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateStoreDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     try {
       return await this.prisma.store.update({
@@ -77,8 +77,8 @@ export class StoresService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.store.update({
       where: { id },

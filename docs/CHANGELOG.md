@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Security
+- Enforce tenant isolation on every read/update/delete: all `findOne`/`update`/`remove` (and the stock-transfer/adjustment approve/complete/cancel actions) now scope by the caller's organization, sourced from the JWT via `@CurrentUser('organizationId')` rather than trusting a client-supplied `?organizationId=` query param. List endpoints derive the org from the JWT too. Closes a cross-organization IDOR where any authenticated user could read, modify, or delete another org's records by id, and where `stock-transfers`, `stock-adjustments`, `inventory`, and `stores` list endpoints returned data across all organizations. Directly-scoped entities filter on their `organizationId` column; invoices/returns/receipts/locations/stock docs filter through their parent relation (vendor/salesOrder/salesInvoice/warehouse). Note: `create` still trusts the body `organizationId` — tracked as a follow-up.
 - Enforce authentication globally: registered `JwtAuthGuard` as an `APP_GUARD`, with a `@Public()` decorator to opt out (login/refresh/logout, health check, marketplace webhooks). Previously only a couple of controllers were guarded.
 - Scope the non-org-scoped list endpoints to a tenant: `purchase-invoices`, `purchase-returns`, `sales-invoices`, `sales-returns`, and `receipts` now require an `organizationId` query param and filter through their parent relation (vendor/salesOrder/salesInvoice), preventing cross-organization data exposure.
 

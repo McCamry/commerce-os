@@ -41,9 +41,9 @@ export class PurchaseReturnsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const purchaseReturn = await this.prisma.purchaseReturn.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, deletedAt: null, vendor: { organizationId } },
       include: this.returnRelations(),
     });
 
@@ -78,8 +78,12 @@ export class PurchaseReturnsService {
     }
   }
 
-  async update(id: string, dto: UpdatePurchaseReturnDto) {
-    await this.findOne(id);
+  async update(
+    id: string,
+    dto: UpdatePurchaseReturnDto,
+    organizationId: string,
+  ) {
+    await this.findOne(id, organizationId);
 
     const data: Prisma.PurchaseReturnUpdateInput = {
       returnNo: dto.returnNo,
@@ -118,8 +122,8 @@ export class PurchaseReturnsService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.purchaseReturn.update({
       where: { id },

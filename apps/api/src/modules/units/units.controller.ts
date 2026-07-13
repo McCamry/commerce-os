@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { UnitsService } from './units.service';
 import { CreateUnitDto } from './dto/create-unit.dto';
 import { UpdateUnitDto } from './dto/update-unit.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('units')
 export class UnitsController {
@@ -19,20 +19,18 @@ export class UnitsController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('status') status?: 'ACTIVE' | 'INACTIVE',
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.unitsService.findAll({ organizationId, status });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.unitsService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.unitsService.findOne(id, organizationId);
   }
 
   @Post()
@@ -41,12 +39,19 @@ export class UnitsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateUnitDto) {
-    return this.unitsService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateUnitDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.unitsService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.unitsService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.unitsService.remove(id, organizationId);
   }
 }

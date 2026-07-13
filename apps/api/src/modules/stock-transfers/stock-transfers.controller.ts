@@ -18,13 +18,19 @@ export class StockTransfersController {
   constructor(private readonly transfersService: StockTransfersService) {}
 
   @Get()
-  findAll(@Query('warehouseId') warehouseId?: string) {
-    return this.transfersService.findAll({ warehouseId });
+  findAll(
+    @CurrentUser('organizationId') organizationId: string,
+    @Query('warehouseId') warehouseId?: string,
+  ) {
+    return this.transfersService.findAll({ organizationId, warehouseId });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transfersService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.transfersService.findOne(id, organizationId);
   }
 
   @Post()
@@ -36,17 +42,26 @@ export class StockTransfersController {
   }
 
   @Post(':id/approve')
-  approve(@Param('id') id: string) {
-    return this.transfersService.approve(id);
+  approve(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.transfersService.approve(id, organizationId);
   }
 
   @Post(':id/complete')
-  complete(@Param('id') id: string, @CurrentUser() user: { sub: string }) {
-    return this.transfersService.complete(id, user.sub);
+  complete(
+    @Param('id') id: string,
+    @CurrentUser() user: { sub: string; organizationId: string },
+  ) {
+    return this.transfersService.complete(id, user.sub, user.organizationId);
   }
 
   @Post(':id/cancel')
-  cancel(@Param('id') id: string) {
-    return this.transfersService.cancel(id);
+  cancel(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.transfersService.cancel(id, organizationId);
   }
 }

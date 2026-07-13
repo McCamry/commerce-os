@@ -12,17 +12,20 @@ import { UpdateLocationDto } from './dto/update-location.dto';
 export class LocationsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  findAll(filter: { warehouseId: string }) {
+  findAll(filter: { warehouseId: string; organizationId: string }) {
     return this.prisma.warehouseLocation.findMany({
-      where: { warehouseId: filter.warehouseId },
+      where: {
+        warehouseId: filter.warehouseId,
+        warehouse: { organizationId: filter.organizationId },
+      },
       orderBy: [{ code: 'asc' }],
       include: { bin: true },
     });
   }
 
-  async findOne(id: string) {
-    const location = await this.prisma.warehouseLocation.findUnique({
-      where: { id },
+  async findOne(id: string, organizationId: string) {
+    const location = await this.prisma.warehouseLocation.findFirst({
+      where: { id, warehouse: { organizationId } },
       include: { bin: true, warehouse: true },
     });
 
@@ -49,8 +52,8 @@ export class LocationsService {
     }
   }
 
-  async update(id: string, dto: UpdateLocationDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateLocationDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     try {
       return await this.prisma.warehouseLocation.update({
@@ -67,8 +70,8 @@ export class LocationsService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.warehouseLocation.update({
       where: { id },

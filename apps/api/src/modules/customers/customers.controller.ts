@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('customers')
 export class CustomersController {
@@ -19,15 +19,10 @@ export class CustomersController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('customerGroupId') customerGroupId?: string,
     @Query('status') status?: 'ACTIVE' | 'INACTIVE',
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.customersService.findAll({
       organizationId,
       customerGroupId,
@@ -36,8 +31,11 @@ export class CustomersController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.customersService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.customersService.findOne(id, organizationId);
   }
 
   @Post()
@@ -46,12 +44,19 @@ export class CustomersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateCustomerDto) {
-    return this.customersService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateCustomerDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.customersService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.customersService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.customersService.remove(id, organizationId);
   }
 }

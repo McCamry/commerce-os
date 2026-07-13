@@ -105,11 +105,15 @@ describe('QuotationsService', () => {
       };
       prisma.$transaction.mockImplementation((cb) => cb(tx));
 
-      await service.update('q-1', {
-        items: [
-          { variantId: 'v-9', unitId: 'u-1', quantity: 3, unitPrice: 10 },
-        ],
-      });
+      await service.update(
+        'q-1',
+        {
+          items: [
+            { variantId: 'v-9', unitId: 'u-1', quantity: 3, unitPrice: 10 },
+          ],
+        },
+        'org-1',
+      );
 
       expect(tx.quotationItem.deleteMany).toHaveBeenCalledWith({
         where: { quotationId: 'q-1' },
@@ -122,9 +126,9 @@ describe('QuotationsService', () => {
     it('rejects an update that clears all items', async () => {
       prisma.quotation.findFirst.mockResolvedValue({ id: 'q-1' });
 
-      await expect(service.update('q-1', { items: [] })).rejects.toBeInstanceOf(
-        BadRequestException,
-      );
+      await expect(
+        service.update('q-1', { items: [] }, 'org-1'),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 
@@ -132,7 +136,7 @@ describe('QuotationsService', () => {
     it('throws NotFoundException when missing', async () => {
       prisma.quotation.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+      await expect(service.findOne('missing', 'org-1')).rejects.toBeInstanceOf(
         NotFoundException,
       );
     });
@@ -142,7 +146,7 @@ describe('QuotationsService', () => {
     it('soft-deletes by setting deletedAt only', async () => {
       prisma.quotation.findFirst.mockResolvedValue({ id: 'q-1' });
 
-      await service.remove('q-1');
+      await service.remove('q-1', 'org-1');
 
       expect(prisma.quotation.update).toHaveBeenCalledWith({
         where: { id: 'q-1' },

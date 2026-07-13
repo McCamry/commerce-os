@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { QuotationsService } from './quotations.service';
 import { CreateQuotationDto } from './dto/create-quotation.dto';
 import { UpdateQuotationDto } from './dto/update-quotation.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('quotations')
 export class QuotationsController {
@@ -19,16 +19,11 @@ export class QuotationsController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('storeId') storeId?: string,
     @Query('customerId') customerId?: string,
     @Query('status') status?: string,
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.quotationsService.findAll({
       organizationId,
       storeId,
@@ -38,8 +33,11 @@ export class QuotationsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.quotationsService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.quotationsService.findOne(id, organizationId);
   }
 
   @Post()
@@ -48,12 +46,19 @@ export class QuotationsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateQuotationDto) {
-    return this.quotationsService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateQuotationDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.quotationsService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.quotationsService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.quotationsService.remove(id, organizationId);
   }
 }

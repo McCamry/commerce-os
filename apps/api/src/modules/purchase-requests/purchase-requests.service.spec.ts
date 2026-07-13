@@ -65,14 +65,14 @@ describe('PurchaseRequestsService', () => {
 
   it('throws NotFoundException when a request is missing', async () => {
     prisma.purchaseRequest.findFirst.mockResolvedValue(null);
-    await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+    await expect(service.findOne('missing', 'org-1')).rejects.toBeInstanceOf(
       NotFoundException,
     );
   });
 
   it('soft-deletes by setting deletedAt only', async () => {
     prisma.purchaseRequest.findFirst.mockResolvedValue({ id: 'pr-1' });
-    await service.remove('pr-1');
+    await service.remove('pr-1', 'org-1');
     expect(prisma.purchaseRequest.update).toHaveBeenCalledWith({
       where: { id: 'pr-1' },
       data: { deletedAt: expect.any(Date) },

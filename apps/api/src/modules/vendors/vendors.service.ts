@@ -28,9 +28,9 @@ export class VendorsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const vendor = await this.prisma.vendor.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
       include: this.vendorRelations(),
     });
 
@@ -67,8 +67,8 @@ export class VendorsService {
     }
   }
 
-  async update(id: string, dto: UpdateVendorDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateVendorDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     try {
       return await this.prisma.vendor.update({
@@ -95,8 +95,8 @@ export class VendorsService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.vendor.update({
       where: { id },

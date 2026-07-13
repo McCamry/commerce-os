@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { TaxesService } from './taxes.service';
 import { CreateTaxDto } from './dto/create-tax.dto';
 import { UpdateTaxDto } from './dto/update-tax.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('taxes')
 export class TaxesController {
@@ -19,20 +19,18 @@ export class TaxesController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('status') status?: 'ACTIVE' | 'INACTIVE',
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.taxesService.findAll({ organizationId, status });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.taxesService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.taxesService.findOne(id, organizationId);
   }
 
   @Post()
@@ -41,12 +39,19 @@ export class TaxesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateTaxDto) {
-    return this.taxesService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateTaxDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.taxesService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taxesService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.taxesService.remove(id, organizationId);
   }
 }

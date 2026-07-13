@@ -75,17 +75,23 @@ describe('CustomersService', () => {
   });
 
   describe('findOne', () => {
-    it('returns the customer when found', async () => {
+    it('returns the customer when found and scopes the query by organization', async () => {
       const customer = { id: 'c-1' };
       prisma.customer.findFirst.mockResolvedValue(customer);
 
-      await expect(service.findOne('c-1')).resolves.toBe(customer);
+      await expect(service.findOne('c-1', 'org-1')).resolves.toBe(customer);
+      expect(prisma.customer.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'c-1', organizationId: 'org-1', deletedAt: null },
+        }),
+      );
     });
 
-    it('throws NotFoundException when missing', async () => {
+    it('throws NotFoundException when the record belongs to another org', async () => {
+      // Row exists but not under this org → scoped query returns null.
       prisma.customer.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+      await expect(service.findOne('c-1', 'other-org')).rejects.toBeInstanceOf(
         NotFoundException,
       );
     });
@@ -127,7 +133,7 @@ describe('CustomersService', () => {
       prisma.customer.findFirst.mockResolvedValue({ id: 'c-1' });
       prisma.customer.update.mockResolvedValue({ id: 'c-1' });
 
-      await service.remove('c-1');
+      await service.remove('c-1', 'org-1');
 
       expect(prisma.customer.update).toHaveBeenCalledWith(
         expect.objectContaining({

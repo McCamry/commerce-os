@@ -94,9 +94,12 @@ export class ProductsService {
     };
   }
 
-  async findOne(id: string): Promise<Record<string, unknown>> {
+  async findOne(
+    id: string,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
     const product = await this.prisma.product.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
       include: {
         category: true,
         brand: true,
@@ -268,8 +271,9 @@ export class ProductsService {
   async update(
     id: string,
     dto: UpdateProductDto,
+    organizationId: string,
   ): Promise<Record<string, unknown>> {
-    await this.findOne(id);
+    await this.findOne(id, organizationId);
 
     try {
       return await this.prisma.$transaction(async (tx) => {
@@ -455,8 +459,11 @@ export class ProductsService {
     }
   }
 
-  async remove(id: string): Promise<Record<string, unknown>> {
-    await this.findOne(id);
+  async remove(
+    id: string,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
+    await this.findOne(id, organizationId);
 
     const product = await this.prisma.product.update({
       where: { id },

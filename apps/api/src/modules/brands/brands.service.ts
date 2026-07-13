@@ -28,9 +28,9 @@ export class BrandsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const brand = await this.prisma.brand.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
     });
 
     if (!brand) {
@@ -57,8 +57,8 @@ export class BrandsService {
     }
   }
 
-  async update(id: string, dto: UpdateBrandDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateBrandDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     try {
       return await this.prisma.brand.update({
@@ -76,8 +76,8 @@ export class BrandsService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.brand.update({
       where: { id },

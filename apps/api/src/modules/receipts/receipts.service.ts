@@ -37,9 +37,13 @@ export class ReceiptsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const receipt = await this.prisma.receipt.findFirst({
-      where: { id, deletedAt: null },
+      where: {
+        id,
+        deletedAt: null,
+        salesInvoice: { salesOrder: { organizationId } },
+      },
       include: { salesInvoice: true },
     });
 
@@ -69,8 +73,8 @@ export class ReceiptsService {
     }
   }
 
-  async update(id: string, dto: UpdateReceiptDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateReceiptDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     try {
       return await this.prisma.receipt.update({
@@ -90,8 +94,8 @@ export class ReceiptsService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.receipt.update({
       where: { id },

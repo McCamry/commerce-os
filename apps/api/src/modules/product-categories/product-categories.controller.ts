@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { ProductCategoriesService } from './product-categories.service';
 import { CreateProductCategoryDto } from './dto/create-product-category.dto';
 import { UpdateProductCategoryDto } from './dto/update-product-category.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('product-categories')
 export class ProductCategoriesController {
@@ -19,21 +19,19 @@ export class ProductCategoriesController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('parentId') parentId?: string,
     @Query('status') status?: 'ACTIVE' | 'INACTIVE',
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.categoriesService.findAll({ organizationId, parentId, status });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.categoriesService.findOne(id, organizationId);
   }
 
   @Post()
@@ -42,12 +40,19 @@ export class ProductCategoriesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateProductCategoryDto) {
-    return this.categoriesService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductCategoryDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.categoriesService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.categoriesService.remove(id, organizationId);
   }
 }

@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { WarehousesService } from './warehouses.service';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('warehouses')
 export class WarehousesController {
@@ -19,20 +19,18 @@ export class WarehousesController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('storeId') storeId?: string,
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.warehousesService.findAll({ organizationId, storeId });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.warehousesService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.warehousesService.findOne(id, organizationId);
   }
 
   @Post()
@@ -41,12 +39,19 @@ export class WarehousesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateWarehouseDto) {
-    return this.warehousesService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateWarehouseDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.warehousesService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.warehousesService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.warehousesService.remove(id, organizationId);
   }
 }

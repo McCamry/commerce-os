@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { SalesReturnsService } from './sales-returns.service';
 import { CreateSalesReturnDto } from './dto/create-sales-return.dto';
 import { UpdateSalesReturnDto } from './dto/update-sales-return.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('sales-returns')
 export class SalesReturnsController {
@@ -19,15 +19,10 @@ export class SalesReturnsController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('salesOrderId') salesOrderId?: string,
     @Query('status') status?: string,
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.salesReturnsService.findAll({
       organizationId,
       salesOrderId,
@@ -36,8 +31,11 @@ export class SalesReturnsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.salesReturnsService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.salesReturnsService.findOne(id, organizationId);
   }
 
   @Post()
@@ -46,12 +44,19 @@ export class SalesReturnsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateSalesReturnDto) {
-    return this.salesReturnsService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateSalesReturnDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.salesReturnsService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.salesReturnsService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.salesReturnsService.remove(id, organizationId);
   }
 }

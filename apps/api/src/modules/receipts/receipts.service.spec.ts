@@ -75,14 +75,14 @@ describe('ReceiptsService', () => {
 
   it('throws NotFoundException when a receipt is missing', async () => {
     prisma.receipt.findFirst.mockResolvedValue(null);
-    await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+    await expect(service.findOne('missing', 'org-1')).rejects.toBeInstanceOf(
       NotFoundException,
     );
   });
 
   it('soft-deletes by setting deletedAt only', async () => {
     prisma.receipt.findFirst.mockResolvedValue({ id: 'r-1' });
-    await service.remove('r-1');
+    await service.remove('r-1', 'org-1');
     expect(prisma.receipt.update).toHaveBeenCalledWith({
       where: { id: 'r-1' },
       data: { deletedAt: expect.any(Date) },

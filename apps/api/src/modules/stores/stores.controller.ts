@@ -10,19 +10,23 @@ import {
 import { StoresService } from './stores.service';
 import { CreateStoreDto } from './dto/create-store.dto';
 import { UpdateStoreDto } from './dto/update-store.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('stores')
 export class StoresController {
   constructor(private readonly storesService: StoresService) {}
 
   @Get()
-  findAll() {
-    return this.storesService.findAll();
+  findAll(@CurrentUser('organizationId') organizationId: string) {
+    return this.storesService.findAll(organizationId);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.storesService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.storesService.findOne(id, organizationId);
   }
 
   @Post()
@@ -31,12 +35,19 @@ export class StoresController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateStoreDto) {
-    return this.storesService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateStoreDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.storesService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.storesService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.storesService.remove(id, organizationId);
   }
 }

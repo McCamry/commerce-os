@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { PurchaseReturnsService } from './purchase-returns.service';
 import { CreatePurchaseReturnDto } from './dto/create-purchase-return.dto';
 import { UpdatePurchaseReturnDto } from './dto/update-purchase-return.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('purchase-returns')
 export class PurchaseReturnsController {
@@ -21,15 +21,10 @@ export class PurchaseReturnsController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('vendorId') vendorId?: string,
     @Query('status') status?: string,
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.purchaseReturnsService.findAll({
       organizationId,
       vendorId,
@@ -38,8 +33,11 @@ export class PurchaseReturnsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.purchaseReturnsService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.purchaseReturnsService.findOne(id, organizationId);
   }
 
   @Post()
@@ -48,12 +46,19 @@ export class PurchaseReturnsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdatePurchaseReturnDto) {
-    return this.purchaseReturnsService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdatePurchaseReturnDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.purchaseReturnsService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.purchaseReturnsService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.purchaseReturnsService.remove(id, organizationId);
   }
 }

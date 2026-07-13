@@ -41,9 +41,9 @@ export class SalesInvoicesService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const invoice = await this.prisma.salesInvoice.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, deletedAt: null, salesOrder: { organizationId } },
       include: this.invoiceRelations(),
     });
 
@@ -81,8 +81,8 @@ export class SalesInvoicesService {
     }
   }
 
-  async update(id: string, dto: UpdateSalesInvoiceDto) {
-    const existing = await this.findOne(id);
+  async update(id: string, dto: UpdateSalesInvoiceDto, organizationId: string) {
+    const existing = await this.findOne(id, organizationId);
 
     const data: Prisma.SalesInvoiceUpdateInput = {
       invoiceNo: dto.invoiceNo,
@@ -131,8 +131,8 @@ export class SalesInvoicesService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.salesInvoice.update({
       where: { id },

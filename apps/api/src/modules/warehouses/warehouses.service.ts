@@ -32,9 +32,12 @@ export class WarehousesService {
     return whs as unknown as Record<string, unknown>[];
   }
 
-  async findOne(id: string): Promise<Record<string, unknown>> {
+  async findOne(
+    id: string,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
     const wh = await this.prisma.warehouse.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
     });
     if (!wh) {
       throw new NotFoundException('Warehouse not found');
@@ -74,8 +77,9 @@ export class WarehousesService {
   async update(
     id: string,
     dto: UpdateWarehouseDto,
+    organizationId: string,
   ): Promise<Record<string, unknown>> {
-    const wh = await this.findOne(id);
+    const wh = await this.findOne(id, organizationId);
 
     try {
       const updated = await this.prisma.$transaction(async (tx) => {
@@ -102,8 +106,11 @@ export class WarehousesService {
     }
   }
 
-  async remove(id: string): Promise<Record<string, unknown>> {
-    await this.findOne(id);
+  async remove(
+    id: string,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
+    await this.findOne(id, organizationId);
 
     const removed = await this.prisma.warehouse.update({
       where: { id },

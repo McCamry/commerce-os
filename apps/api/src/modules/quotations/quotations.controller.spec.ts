@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
 import { QuotationsController } from './quotations.controller';
 import { QuotationsService } from './quotations.service';
 
@@ -32,12 +31,6 @@ describe('QuotationsController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
-  });
-
-  it('requires organizationId on findAll', () => {
-    expect(() => controller.findAll(undefined as unknown as string)).toThrow(
-      BadRequestException,
-    );
   });
 
   it('forwards findAll filters to the service', () => {

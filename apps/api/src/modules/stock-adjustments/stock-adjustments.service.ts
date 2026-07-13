@@ -11,8 +11,10 @@ import { CreateStockAdjustmentDto } from './dto/create-stock-adjustment.dto';
 export class StockAdjustmentsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(filter: { warehouseId?: string }) {
-    const where: Prisma.StockAdjustmentWhereInput = {};
+  async findAll(filter: { organizationId: string; warehouseId?: string }) {
+    const where: Prisma.StockAdjustmentWhereInput = {
+      warehouse: { organizationId: filter.organizationId },
+    };
     if (filter.warehouseId) {
       where.warehouseId = filter.warehouseId;
     }
@@ -31,9 +33,9 @@ export class StockAdjustmentsService {
     });
   }
 
-  async findOne(id: string) {
-    const adj = await this.prisma.stockAdjustment.findUnique({
-      where: { id },
+  async findOne(id: string, organizationId: string) {
+    const adj = await this.prisma.stockAdjustment.findFirst({
+      where: { id, warehouse: { organizationId } },
       include: {
         warehouse: true,
         items: {
@@ -96,8 +98,8 @@ export class StockAdjustmentsService {
     return created;
   }
 
-  async complete(id: string, userId: string) {
-    const adj = await this.findOne(id);
+  async complete(id: string, userId: string, organizationId: string) {
+    const adj = await this.findOne(id, organizationId);
     if (adj.status !== 'DRAFT') {
       throw new BadRequestException('Only DRAFT adjustments can be completed');
     }

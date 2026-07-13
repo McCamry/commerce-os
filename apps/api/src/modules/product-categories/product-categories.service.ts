@@ -44,9 +44,9 @@ export class ProductCategoriesService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const category = await this.prisma.productCategory.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
       include: {
         parent: true,
         children: {
@@ -85,8 +85,12 @@ export class ProductCategoriesService {
     }
   }
 
-  async update(id: string, dto: UpdateProductCategoryDto) {
-    await this.findOne(id);
+  async update(
+    id: string,
+    dto: UpdateProductCategoryDto,
+    organizationId: string,
+  ) {
+    await this.findOne(id, organizationId);
 
     try {
       return await this.prisma.productCategory.update({
@@ -109,8 +113,8 @@ export class ProductCategoriesService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.productCategory.update({
       where: { id },

@@ -7,11 +7,11 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('products')
 export class ProductsController {
@@ -19,7 +19,7 @@ export class ProductsController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('categoryId') categoryId?: string,
     @Query('brandId') brandId?: string,
     @Query('status') status?: 'DRAFT' | 'ACTIVE' | 'INACTIVE' | 'ARCHIVED',
@@ -27,12 +27,6 @@ export class ProductsController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
-
     const pageNum = page ? parseInt(page, 10) : undefined;
     const limitNum = limit ? parseInt(limit, 10) : undefined;
 
@@ -48,8 +42,11 @@ export class ProductsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.productsService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.productsService.findOne(id, organizationId);
   }
 
   @Post()
@@ -58,12 +55,19 @@ export class ProductsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
-    return this.productsService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateProductDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.productsService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.productsService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.productsService.remove(id, organizationId);
   }
 }

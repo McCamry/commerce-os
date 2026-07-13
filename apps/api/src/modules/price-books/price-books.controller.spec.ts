@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BadRequestException } from '@nestjs/common';
 import { PriceBooksController } from './price-books.controller';
 import { PriceBooksService } from './price-books.service';
 
@@ -24,12 +23,6 @@ describe('PriceBooksController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
-  });
-
-  it('requires organizationId on findAll', () => {
-    expect(() => controller.findAll(undefined as unknown as string)).toThrow(
-      BadRequestException,
-    );
   });
 
   it('forwards findAll filters to the service', () => {

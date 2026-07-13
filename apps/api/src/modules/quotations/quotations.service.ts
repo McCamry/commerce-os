@@ -46,9 +46,9 @@ export class QuotationsService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const quotation = await this.prisma.quotation.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
       include: this.quotationRelations(),
     });
 
@@ -94,8 +94,8 @@ export class QuotationsService {
     }
   }
 
-  async update(id: string, dto: UpdateQuotationDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateQuotationDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     const data: Prisma.QuotationUpdateInput = {
       quotationDate: dto.quotationDate
@@ -152,8 +152,8 @@ export class QuotationsService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.quotation.update({
       where: { id },

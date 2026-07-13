@@ -89,7 +89,7 @@ describe('PurchaseInvoicesService', () => {
 
   it('throws NotFoundException when an invoice is missing', async () => {
     prisma.purchaseInvoice.findFirst.mockResolvedValue(null);
-    await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+    await expect(service.findOne('missing', 'org-1')).rejects.toBeInstanceOf(
       NotFoundException,
     );
   });

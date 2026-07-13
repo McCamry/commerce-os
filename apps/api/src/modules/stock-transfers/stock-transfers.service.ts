@@ -11,13 +11,21 @@ import { CreateStockTransferDto } from './dto/create-stock-transfer.dto';
 export class StockTransfersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(filter: { warehouseId?: string }) {
-    const where: Prisma.StockTransferWhereInput = {};
+  async findAll(filter: { organizationId: string; warehouseId?: string }) {
+    // Scope to transfers where either endpoint warehouse belongs to the org.
+    const where: Prisma.StockTransferWhereInput = {
+      OR: [
+        { fromWarehouse: { organizationId: filter.organizationId } },
+        { toWarehouse: { organizationId: filter.organizationId } },
+      ],
+    };
     if (filter.warehouseId) {
-      where.OR = [
-        { fromWarehouseId: filter.warehouseId },
-        { toWarehouseId: filter.warehouseId },
-      ];
+      where.AND = {
+        OR: [
+          { fromWarehouseId: filter.warehouseId },
+          { toWarehouseId: filter.warehouseId },
+        ],
+      };
     }
     return this.prisma.stockTransfer.findMany({
       where,
@@ -36,9 +44,15 @@ export class StockTransfersService {
     });
   }
 
-  async findOne(id: string) {
-    const transfer = await this.prisma.stockTransfer.findUnique({
-      where: { id },
+  async findOne(id: string, organizationId: string) {
+    const transfer = await this.prisma.stockTransfer.findFirst({
+      where: {
+        id,
+        OR: [
+          { fromWarehouse: { organizationId } },
+          { toWarehouse: { organizationId } },
+        ],
+      },
       include: {
         fromWarehouse: true,
         toWarehouse: true,
@@ -90,8 +104,8 @@ export class StockTransfersService {
     return created;
   }
 
-  async approve(id: string) {
-    const transfer = await this.findOne(id);
+  async approve(id: string, organizationId: string) {
+    const transfer = await this.findOne(id, organizationId);
     if (transfer.status !== 'DRAFT') {
       throw new BadRequestException('Only DRAFT transfers can be approved');
     }
@@ -134,8 +148,8 @@ export class StockTransfersService {
     return updated;
   }
 
-  async complete(id: string, userId: string) {
-    const transfer = await this.findOne(id);
+  async complete(id: string, userId: string, organizationId: string) {
+    const transfer = await this.findOne(id, organizationId);
     if (transfer.status !== 'APPROVED') {
       throw new BadRequestException('Only APPROVED transfers can be completed');
     }
@@ -225,8 +239,8 @@ export class StockTransfersService {
     return updated;
   }
 
-  async cancel(id: string) {
-    const transfer = await this.findOne(id);
+  async cancel(id: string, organizationId: string) {
+    const transfer = await this.findOne(id, organizationId);
     if (transfer.status === 'COMPLETED' || transfer.status === 'CANCELLED') {
       throw new BadRequestException(
         'Completed or cancelled transfers cannot be cancelled',

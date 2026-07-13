@@ -37,9 +37,9 @@ export class CustomersService {
     });
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const customer = await this.prisma.customer.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
       include: this.customerRelations(),
     });
 
@@ -75,8 +75,8 @@ export class CustomersService {
     }
   }
 
-  async update(id: string, dto: UpdateCustomerDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateCustomerDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     try {
       return await this.prisma.customer.update({
@@ -102,8 +102,8 @@ export class CustomersService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     return this.prisma.customer.update({
       where: { id },

@@ -36,9 +36,9 @@ export class TaxesService {
     }));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, organizationId: string) {
     const tax = await this.prisma.tax.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
     });
 
     if (!tax) {
@@ -72,8 +72,8 @@ export class TaxesService {
     }
   }
 
-  async update(id: string, dto: UpdateTaxDto) {
-    await this.findOne(id);
+  async update(id: string, dto: UpdateTaxDto, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     try {
       const data: Prisma.TaxUpdateInput = {
@@ -100,8 +100,8 @@ export class TaxesService {
     }
   }
 
-  async remove(id: string) {
-    await this.findOne(id);
+  async remove(id: string, organizationId: string) {
+    await this.findOne(id, organizationId);
 
     const tax = await this.prisma.tax.update({
       where: { id },

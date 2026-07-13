@@ -70,7 +70,7 @@ describe('VendorsService', () => {
     it('throws NotFoundException when missing', async () => {
       prisma.vendor.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('missing')).rejects.toBeInstanceOf(
+      await expect(service.findOne('missing', 'org-1')).rejects.toBeInstanceOf(
         NotFoundException,
       );
     });
@@ -112,7 +112,7 @@ describe('VendorsService', () => {
       prisma.vendor.findFirst.mockResolvedValue({ id: 'v-1' });
       prisma.vendor.update.mockResolvedValue({ id: 'v-1' });
 
-      await service.remove('v-1');
+      await service.remove('v-1', 'org-1');
 
       expect(prisma.vendor.update).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -18,13 +18,19 @@ export class StockAdjustmentsController {
   constructor(private readonly adjustmentsService: StockAdjustmentsService) {}
 
   @Get()
-  findAll(@Query('warehouseId') warehouseId?: string) {
-    return this.adjustmentsService.findAll({ warehouseId });
+  findAll(
+    @CurrentUser('organizationId') organizationId: string,
+    @Query('warehouseId') warehouseId?: string,
+  ) {
+    return this.adjustmentsService.findAll({ organizationId, warehouseId });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.adjustmentsService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.adjustmentsService.findOne(id, organizationId);
   }
 
   @Post()
@@ -36,7 +42,10 @@ export class StockAdjustmentsController {
   }
 
   @Post(':id/complete')
-  complete(@Param('id') id: string, @CurrentUser() user: { sub: string }) {
-    return this.adjustmentsService.complete(id, user.sub);
+  complete(
+    @Param('id') id: string,
+    @CurrentUser() user: { sub: string; organizationId: string },
+  ) {
+    return this.adjustmentsService.complete(id, user.sub, user.organizationId);
   }
 }
