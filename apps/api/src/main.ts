@@ -16,12 +16,13 @@ async function bootstrap() {
   app.enableCors(); // Enables CORS with default settings
 
   // Global standardizations
-  // NOTE: most DTOs are plain classes without class-validator decorators, so
-  // `whitelist: true` would strip every field. Keep it off until DTOs are
-  // annotated; `transform` still coerces bodies into DTO instances.
+  // All `@Body()` DTOs are decorated with class-validator, so `whitelist: true`
+  // safely strips unknown properties. Nested item arrays use `@IsArray()` only
+  // (no `@ValidateNested`), so whitelist does not recurse into them and their
+  // payloads pass through intact. `transform` coerces bodies into DTO instances.
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: false,
+      whitelist: true,
       transform: true,
       forbidNonWhitelisted: false,
     }),

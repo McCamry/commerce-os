@@ -1,3 +1,5 @@
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
 export class CreatePurchaseReturnItemDto {
   variantId!: string;
   unitId!: string;
@@ -6,10 +8,26 @@ export class CreatePurchaseReturnItemDto {
 }
 
 export class CreatePurchaseReturnDto {
+  @IsString()
+  @IsNotEmpty()
   vendorId!: string;
+
+  @IsString()
+  @IsNotEmpty()
   returnNo!: string;
+
+  @IsOptional()
+  @IsString()
   returnDate?: string;
+
+  @IsOptional()
+  @IsString()
   reason?: string;
+
+  @IsOptional()
+  @IsString()
   status?: string;
+
+  @IsArray()
   items!: CreatePurchaseReturnItemDto[];
 }
