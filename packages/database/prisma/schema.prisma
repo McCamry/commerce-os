@@ -270,6 +270,7 @@ model Organization {
   ProductBundle       ProductBundle[]
   CustomerSegment     CustomerSegment[]
   PriceRule           PriceRule[]
+  translations        Translation[]
 
   @@index([code], map: "idx_org_code")
   @@index([slug], map: "idx_org_slug")
@@ -4027,4 +4028,21 @@ model PriceRule {
   @@index([productId])
   @@index([categoryId])
   @@map("promo_price_rules")
+}
+
+model Translation {
+  id             String @id @default(uuid())
+  organizationId String @map("organization_id")
+  locale         String // e.g. "th", "en"
+  key            String // dot-namespaced key, e.g. "customers.title"
+  value          String
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, locale, key], map: "uk_translation_org_locale_key")
+  @@index([organizationId, locale])
+  @@map("translations")
 }

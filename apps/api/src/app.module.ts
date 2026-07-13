@@ -33,6 +33,7 @@ import { SalesInvoicesModule } from './modules/sales-invoices/sales-invoices.mod
 import { ReceiptsModule } from './modules/receipts/receipts.module';
 import { SalesReturnsModule } from './modules/sales-returns/sales-returns.module';
 import { MarketplacesModule } from './modules/marketplaces/marketplaces.module';
+import { TranslationsModule } from './modules/translations/translations.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { MarketplacesModule } from './modules/marketplaces/marketplaces.module';
     ReceiptsModule,
     SalesReturnsModule,
     MarketplacesModule,
+    TranslationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
