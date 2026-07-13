@@ -88,3 +88,14 @@ body {
   background-color: var(--background);
   color: var(--foreground);
 }
+
+/*
+ * Native <select> dropdown options are rendered by the browser and do not
+ * inherit our theme tokens, so in dark mode the option text blends into the
+ * popup background. Pin both explicitly (Chrome/Edge/Firefox honor this).
+ */
+select option,
+select optgroup {
+  background-color: var(--popover);
+  color: var(--popover-foreground);
+}
