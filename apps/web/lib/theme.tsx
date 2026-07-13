@@ -1,9 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import { THEME_STORAGE_KEY as THEME_KEY } from './theme-script';
 
 export type Theme = 'light' | 'dark' | 'system';
-const THEME_KEY = 'commerce_theme';
 
 interface ThemeState {
   theme: Theme;
@@ -59,9 +59,3 @@ export function useTheme() {
   if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
   return ctx;
 }
-
-/**
- * Inline script string that applies the saved theme before first paint to
- * avoid a flash of the wrong theme. Injected in the document head.
- */
-export const themeNoFlashScript = `(function(){try{var t=localStorage.getItem('${THEME_KEY}')||'system';var d=t==='dark'||(t==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
