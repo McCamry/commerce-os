@@ -2,7 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard,
+  Package,
+  Users,
+  ShoppingCart,
+  Boxes,
+  LogOut,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -10,6 +17,9 @@ import { Button } from '@/components/ui/button';
 const nav = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/products', label: 'Products', icon: Package },
+  { href: '/customers', label: 'Customers', icon: Users },
+  { href: '/sales-orders', label: 'Sales Orders', icon: ShoppingCart },
+  { href: '/inventory', label: 'Inventory', icon: Boxes },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
