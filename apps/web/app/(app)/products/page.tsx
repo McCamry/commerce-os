@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
+import { useT } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -52,26 +52,22 @@ const slugify = (s: string) =>
     .replace(/^-+|-+$/g, '');
 
 export default function ProductsPage() {
-  const { orgId } = useAuth();
+  const t = useT();
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Product | null>(null);
 
   const products = useQuery({
-    queryKey: ['products', orgId],
-    enabled: !!orgId,
-    queryFn: () => api.get<Product[]>(`/products?organizationId=${orgId}`),
+    queryKey: ['products'],
+    queryFn: () => api.get<Product[]>('/products'),
   });
   const categories = useQuery({
-    queryKey: ['product-categories', orgId],
-    enabled: !!orgId,
-    queryFn: () =>
-      api.get<Named[]>(`/product-categories?organizationId=${orgId}`),
+    queryKey: ['product-categories'],
+    queryFn: () => api.get<Named[]>('/product-categories'),
   });
   const units = useQuery({
-    queryKey: ['units', orgId],
-    enabled: !!orgId,
-    queryFn: () => api.get<Named[]>(`/units?organizationId=${orgId}`),
+    queryKey: ['units'],
+    queryFn: () => api.get<Named[]>('/units'),
   });
 
   const categoryName = (id: string) =>
@@ -80,33 +76,29 @@ export default function ProductsPage() {
   const removeMut = useMutation({
     mutationFn: (id: string) => api.del(`/products/${id}`),
     onSuccess: () => {
-      toast.success('Product deleted');
-      void qc.invalidateQueries({ queryKey: ['products', orgId] });
+      toast.success(t('products.deleted'));
+      void qc.invalidateQueries({ queryKey: ['products'] });
     },
     onError: (e: Error) => toast.error(e.message),
   });
-
-  function openCreate() {
-    setEditing(null);
-    setDialogOpen(true);
-  }
-  function openEdit(p: Product) {
-    setEditing(p);
-    setDialogOpen(true);
-  }
 
   return (
     <div className="p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Products</h1>
+          <h1 className="text-2xl font-semibold">{t('products.title')}</h1>
           <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            {products.data?.length ?? 0} product(s)
+            {t('products.count', { count: products.data?.length ?? 0 })}
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button
+          onClick={() => {
+            setEditing(null);
+            setDialogOpen(true);
+          }}
+        >
           <Plus className="size-4" />
-          New product
+          {t('products.new')}
         </Button>
       </div>
 
@@ -114,18 +106,20 @@ export default function ProductsPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              <TableHead>{t('products.code')}</TableHead>
+              <TableHead>{t('products.name')}</TableHead>
+              <TableHead>{t('products.category')}</TableHead>
+              <TableHead>{t('products.status')}</TableHead>
+              <TableHead className="w-24 text-right">
+                {t('common.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {products.isLoading && (
               <TableRow>
                 <TableCell colSpan={5} className="py-8 text-center">
-                  Loading…
+                  {t('common.loading')}
                 </TableCell>
               </TableRow>
             )}
@@ -145,7 +139,7 @@ export default function ProductsPage() {
                   colSpan={5}
                   className="py-8 text-center text-[var(--color-muted-foreground)]"
                 >
-                  No products yet. Create one.
+                  {t('products.empty')}
                 </TableCell>
               </TableRow>
             )}
@@ -156,7 +150,7 @@ export default function ProductsPage() {
                 <TableCell>{categoryName(p.categoryId)}</TableCell>
                 <TableCell>
                   <span className="rounded-full bg-[var(--color-accent)] px-2 py-0.5 text-xs">
-                    {p.status}
+                    {t(`status.${p.status}`)}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
@@ -164,7 +158,10 @@ export default function ProductsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => openEdit(p)}
+                      onClick={() => {
+                        setEditing(p);
+                        setDialogOpen(true);
+                      }}
                     >
                       <Pencil className="size-4" />
                     </Button>
@@ -172,7 +169,7 @@ export default function ProductsPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        if (confirm(`Delete "${p.name}"?`))
+                        if (confirm(t('common.confirmDelete', { name: p.name })))
                           removeMut.mutate(p.id);
                       }}
                     >
@@ -191,12 +188,9 @@ export default function ProductsPage() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           editing={editing}
-          orgId={orgId}
           categories={categories.data ?? []}
           units={units.data ?? []}
-          onSaved={() =>
-            void qc.invalidateQueries({ queryKey: ['products', orgId] })
-          }
+          onSaved={() => void qc.invalidateQueries({ queryKey: ['products'] })}
         />
       )}
     </div>
@@ -207,7 +201,6 @@ function ProductDialog({
   open,
   onOpenChange,
   editing,
-  orgId,
   categories,
   units,
   onSaved,
@@ -215,11 +208,11 @@ function ProductDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
   editing: Product | null;
-  orgId: string | null;
   categories: Named[];
   units: Named[];
   onSaved: () => void;
 }) {
+  const t = useT();
   const [form, setForm] = React.useState({
     code: editing?.code ?? '',
     name: editing?.name ?? '',
@@ -243,10 +236,10 @@ function ProductDialog({
         description: form.description || undefined,
       };
       if (editing) return api.patch(`/products/${editing.id}`, payload);
-      return api.post('/products', { organizationId: orgId, ...payload });
+      return api.post('/products', payload);
     },
     onSuccess: () => {
-      toast.success(editing ? 'Product updated' : 'Product created');
+      toast.success(t(editing ? 'products.updated' : 'products.created'));
       onSaved();
       onOpenChange(false);
     },
@@ -257,7 +250,9 @@ function ProductDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editing ? 'Edit product' : 'New product'}</DialogTitle>
+          <DialogTitle>
+            {t(editing ? 'products.editTitle' : 'products.newTitle')}
+          </DialogTitle>
         </DialogHeader>
         <form
           className="grid grid-cols-2 gap-4"
@@ -266,20 +261,20 @@ function ProductDialog({
             mut.mutate();
           }}
         >
-          <Field label="Code">
+          <Field label={t('products.code')}>
             <Input
               value={form.code}
               onChange={(e) => set('code', e.target.value)}
               required
             />
           </Field>
-          <Field label="SKU">
+          <Field label={t('products.sku')}>
             <Input
               value={form.sku}
               onChange={(e) => set('sku', e.target.value)}
             />
           </Field>
-          <Field label="Name" full>
+          <Field label={t('products.name')} full>
             <Input
               value={form.name}
               onChange={(e) => {
@@ -289,20 +284,20 @@ function ProductDialog({
               required
             />
           </Field>
-          <Field label="Slug" full>
+          <Field label={t('products.slug')} full>
             <Input
               value={form.slug}
               onChange={(e) => set('slug', e.target.value)}
-              placeholder="auto from name"
+              placeholder={t('products.slugAuto')}
             />
           </Field>
-          <Field label="Category">
+          <Field label={t('products.category')}>
             <Select
               value={form.categoryId}
               onChange={(e) => set('categoryId', e.target.value)}
               required
             >
-              <option value="">Select…</option>
+              <option value="">{t('common.select')}</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -310,13 +305,13 @@ function ProductDialog({
               ))}
             </Select>
           </Field>
-          <Field label="Unit">
+          <Field label={t('products.unit')}>
             <Select
               value={form.unitId}
               onChange={(e) => set('unitId', e.target.value)}
               required
             >
-              <option value="">Select…</option>
+              <option value="">{t('common.select')}</option>
               {units.map((u) => (
                 <option key={u.id} value={u.id}>
                   {u.name}
@@ -324,14 +319,14 @@ function ProductDialog({
               ))}
             </Select>
           </Field>
-          <Field label="Status" full>
+          <Field label={t('products.status')} full>
             <Select
               value={form.status}
               onChange={(e) => set('status', e.target.value)}
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {t(`status.${s}`)}
                 </option>
               ))}
             </Select>
@@ -342,10 +337,10 @@ function ProductDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={mut.isPending}>
-              {mut.isPending ? 'Saving…' : 'Save'}
+              {mut.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>
         </form>

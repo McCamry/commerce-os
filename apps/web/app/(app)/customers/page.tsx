@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useT } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +38,7 @@ interface Customer {
 const STATUSES = ['ACTIVE', 'INACTIVE'];
 
 export default function CustomersPage() {
+  const t = useT();
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Customer | null>(null);
@@ -49,7 +51,7 @@ export default function CustomersPage() {
   const removeMut = useMutation({
     mutationFn: (id: string) => api.del(`/customers/${id}`),
     onSuccess: () => {
-      toast.success('Customer deleted');
+      toast.success(t('customers.deleted'));
       void qc.invalidateQueries({ queryKey: ['customers'] });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -59,9 +61,9 @@ export default function CustomersPage() {
     <div className="p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Customers</h1>
+          <h1 className="text-2xl font-semibold">{t('customers.title')}</h1>
           <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            {customers.data?.length ?? 0} customer(s)
+            {t('customers.count', { count: customers.data?.length ?? 0 })}
           </p>
         </div>
         <Button
@@ -71,7 +73,7 @@ export default function CustomersPage() {
           }}
         >
           <Plus className="size-4" />
-          New customer
+          {t('customers.new')}
         </Button>
       </div>
 
@@ -79,19 +81,21 @@ export default function CustomersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Phone</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-24 text-right">Actions</TableHead>
+              <TableHead>{t('customers.code')}</TableHead>
+              <TableHead>{t('customers.name')}</TableHead>
+              <TableHead>{t('customers.email')}</TableHead>
+              <TableHead>{t('customers.phone')}</TableHead>
+              <TableHead>{t('customers.status')}</TableHead>
+              <TableHead className="w-24 text-right">
+                {t('common.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {customers.isLoading && (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center">
-                  Loading…
+                  {t('common.loading')}
                 </TableCell>
               </TableRow>
             )}
@@ -111,7 +115,7 @@ export default function CustomersPage() {
                   colSpan={6}
                   className="py-8 text-center text-[var(--color-muted-foreground)]"
                 >
-                  No customers yet. Create one.
+                  {t('customers.empty')}
                 </TableCell>
               </TableRow>
             )}
@@ -123,7 +127,7 @@ export default function CustomersPage() {
                 <TableCell>{c.phone1 ?? '—'}</TableCell>
                 <TableCell>
                   <span className="rounded-full bg-[var(--color-accent)] px-2 py-0.5 text-xs">
-                    {c.status}
+                    {t(`status.${c.status}`)}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
@@ -142,7 +146,7 @@ export default function CustomersPage() {
                       variant="ghost"
                       size="icon"
                       onClick={() => {
-                        if (confirm(`Delete "${c.name}"?`))
+                        if (confirm(t('common.confirmDelete', { name: c.name })))
                           removeMut.mutate(c.id);
                       }}
                     >
@@ -161,9 +165,7 @@ export default function CustomersPage() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           editing={editing}
-          onSaved={() =>
-            void qc.invalidateQueries({ queryKey: ['customers'] })
-          }
+          onSaved={() => void qc.invalidateQueries({ queryKey: ['customers'] })}
         />
       )}
     </div>
@@ -181,6 +183,7 @@ function CustomerDialog({
   editing: Customer | null;
   onSaved: () => void;
 }) {
+  const t = useT();
   const [form, setForm] = React.useState({
     code: editing?.code ?? '',
     name: editing?.name ?? '',
@@ -203,7 +206,7 @@ function CustomerDialog({
       return api.post('/customers', payload);
     },
     onSuccess: () => {
-      toast.success(editing ? 'Customer updated' : 'Customer created');
+      toast.success(t(editing ? 'customers.updated' : 'customers.created'));
       onSaved();
       onOpenChange(false);
     },
@@ -215,7 +218,7 @@ function CustomerDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {editing ? 'Edit customer' : 'New customer'}
+            {t(editing ? 'customers.editTitle' : 'customers.newTitle')}
           </DialogTitle>
         </DialogHeader>
         <form
@@ -225,41 +228,41 @@ function CustomerDialog({
             mut.mutate();
           }}
         >
-          <Field label="Code">
+          <Field label={t('customers.code')}>
             <Input
               value={form.code}
               onChange={(e) => set('code', e.target.value)}
               required
             />
           </Field>
-          <Field label="Name">
+          <Field label={t('customers.name')}>
             <Input
               value={form.name}
               onChange={(e) => set('name', e.target.value)}
               required
             />
           </Field>
-          <Field label="Email">
+          <Field label={t('customers.email')}>
             <Input
               type="email"
               value={form.email}
               onChange={(e) => set('email', e.target.value)}
             />
           </Field>
-          <Field label="Phone">
+          <Field label={t('customers.phone')}>
             <Input
               value={form.phone1}
               onChange={(e) => set('phone1', e.target.value)}
             />
           </Field>
-          <Field label="Status" full>
+          <Field label={t('customers.status')} full>
             <Select
               value={form.status}
               onChange={(e) => set('status', e.target.value)}
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
-                  {s}
+                  {t(`status.${s}`)}
                 </option>
               ))}
             </Select>
@@ -270,10 +273,10 @@ function CustomerDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={mut.isPending}>
-              {mut.isPending ? 'Saving…' : 'Save'}
+              {mut.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </DialogFooter>
         </form>

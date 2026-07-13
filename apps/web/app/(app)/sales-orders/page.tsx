@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Trash2, CheckCircle2 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useT } from '@/lib/i18n';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,6 +61,7 @@ const money = (v: string | number) =>
   }).format(Number(v));
 
 export default function SalesOrdersPage() {
+  const t = useT();
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = React.useState(false);
 
@@ -71,8 +73,8 @@ export default function SalesOrdersPage() {
   const confirmMut = useMutation({
     mutationFn: (id: string) => api.post(`/sales-orders/${id}/confirm`, {}),
     onSuccess: (order) => {
-      const status = (order as { status?: string })?.status ?? 'updated';
-      toast.success(`Order confirmed — ${status}`);
+      const status = (order as { status?: string })?.status ?? '';
+      toast.success(t('salesOrders.confirmed', { status: t(`status.${status}`) }));
       void qc.invalidateQueries({ queryKey: ['sales-orders'] });
       void qc.invalidateQueries({ queryKey: ['inventory'] });
     },
@@ -83,14 +85,14 @@ export default function SalesOrdersPage() {
     <div className="p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold">Sales Orders</h1>
+          <h1 className="text-2xl font-semibold">{t('salesOrders.title')}</h1>
           <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            {orders.data?.length ?? 0} order(s)
+            {t('salesOrders.count', { count: orders.data?.length ?? 0 })}
           </p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
           <Plus className="size-4" />
-          New order
+          {t('salesOrders.new')}
         </Button>
       </div>
 
@@ -98,19 +100,25 @@ export default function SalesOrdersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order No</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead className="text-right">Lines</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="w-32 text-right">Actions</TableHead>
+              <TableHead>{t('salesOrders.orderNo')}</TableHead>
+              <TableHead>{t('salesOrders.customer')}</TableHead>
+              <TableHead className="text-right">
+                {t('salesOrders.lines')}
+              </TableHead>
+              <TableHead className="text-right">
+                {t('salesOrders.total')}
+              </TableHead>
+              <TableHead>{t('salesOrders.status')}</TableHead>
+              <TableHead className="w-32 text-right">
+                {t('common.actions')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {orders.isLoading && (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center">
-                  Loading…
+                  {t('common.loading')}
                 </TableCell>
               </TableRow>
             )}
@@ -130,7 +138,7 @@ export default function SalesOrdersPage() {
                   colSpan={6}
                   className="py-8 text-center text-[var(--color-muted-foreground)]"
                 >
-                  No sales orders yet. Create one.
+                  {t('salesOrders.empty')}
                 </TableCell>
               </TableRow>
             )}
@@ -150,11 +158,10 @@ export default function SalesOrdersPage() {
                   <span
                     className={cn(
                       'rounded-full px-2 py-0.5 text-xs font-medium',
-                      STATUS_STYLES[o.status] ??
-                        'bg-[var(--color-accent)]',
+                      STATUS_STYLES[o.status] ?? 'bg-[var(--color-accent)]',
                     )}
                   >
-                    {o.status}
+                    {t(`status.${o.status}`)}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">
@@ -166,7 +173,7 @@ export default function SalesOrdersPage() {
                       onClick={() => confirmMut.mutate(o.id)}
                     >
                       <CheckCircle2 className="size-4" />
-                      Confirm
+                      {t('salesOrders.confirm')}
                     </Button>
                   )}
                 </TableCell>
@@ -205,6 +212,7 @@ function OrderDialog({
   onOpenChange: (v: boolean) => void;
   onSaved: () => void;
 }) {
+  const t = useT();
   const customers = useQuery({
     queryKey: ['customers'],
     queryFn: () => api.get<Named[]>('/customers'),
@@ -272,7 +280,7 @@ function OrderDialog({
         })),
       }),
     onSuccess: () => {
-      toast.success('Sales order created');
+      toast.success(t('salesOrders.created'));
       onSaved();
       onOpenChange(false);
     },
@@ -290,7 +298,7 @@ function OrderDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>New sales order</DialogTitle>
+          <DialogTitle>{t('salesOrders.newTitle')}</DialogTitle>
         </DialogHeader>
         <form
           className="space-y-4"
@@ -300,20 +308,20 @@ function OrderDialog({
           }}
         >
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Order No">
+            <Field label={t('salesOrders.orderNo')}>
               <Input
                 value={form.orderNo}
                 onChange={(e) => set('orderNo', e.target.value)}
                 required
               />
             </Field>
-            <Field label="Customer">
+            <Field label={t('salesOrders.customer')}>
               <Select
                 value={form.customerId}
                 onChange={(e) => set('customerId', e.target.value)}
                 required
               >
-                <option value="">Select…</option>
+                <option value="">{t('common.select')}</option>
                 {customers.data?.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
@@ -321,13 +329,13 @@ function OrderDialog({
                 ))}
               </Select>
             </Field>
-            <Field label="Store">
+            <Field label={t('salesOrders.store')}>
               <Select
                 value={form.storeId}
                 onChange={(e) => set('storeId', e.target.value)}
                 required
               >
-                <option value="">Select…</option>
+                <option value="">{t('common.select')}</option>
                 {stores.data?.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
@@ -335,12 +343,12 @@ function OrderDialog({
                 ))}
               </Select>
             </Field>
-            <Field label="Warehouse (for reservation)">
+            <Field label={t('salesOrders.warehouse')}>
               <Select
                 value={form.warehouseId}
                 onChange={(e) => set('warehouseId', e.target.value)}
               >
-                <option value="">None</option>
+                <option value="">{t('common.none')}</option>
                 {warehouses.data?.map((w) => (
                   <option key={w.id} value={w.id}>
                     {w.name}
@@ -352,7 +360,7 @@ function OrderDialog({
 
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <Label>Line items</Label>
+              <Label>{t('salesOrders.lineItems')}</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -365,7 +373,7 @@ function OrderDialog({
                 }
               >
                 <Plus className="size-4" />
-                Add line
+                {t('salesOrders.addLine')}
               </Button>
             </div>
             <div className="space-y-2">
@@ -377,7 +385,7 @@ function OrderDialog({
                       onChange={(e) => setLine(i, 'variantId', e.target.value)}
                       required
                     >
-                      <option value="">Select variant…</option>
+                      <option value="">{t('salesOrders.variant')}</option>
                       {variantOptions.map((v) => (
                         <option key={v.id} value={v.id}>
                           {v.label}
@@ -391,7 +399,7 @@ function OrderDialog({
                       onChange={(e) => setLine(i, 'unitId', e.target.value)}
                       required
                     >
-                      <option value="">Unit…</option>
+                      <option value="">{t('salesOrders.unit')}</option>
                       {units.data?.map((u) => (
                         <option key={u.id} value={u.id}>
                           {u.name}
@@ -405,7 +413,7 @@ function OrderDialog({
                       min="1"
                       value={l.quantity}
                       onChange={(e) => setLine(i, 'quantity', e.target.value)}
-                      aria-label="Quantity"
+                      aria-label={t('salesOrders.quantity')}
                     />
                   </div>
                   <div className="w-24">
@@ -415,7 +423,7 @@ function OrderDialog({
                       step="0.01"
                       value={l.unitPrice}
                       onChange={(e) => setLine(i, 'unitPrice', e.target.value)}
-                      aria-label="Unit price"
+                      aria-label={t('salesOrders.unitPrice')}
                     />
                   </div>
                   <Button
@@ -433,7 +441,7 @@ function OrderDialog({
               ))}
             </div>
             <div className="mt-3 text-right text-sm">
-              Total:{' '}
+              {t('salesOrders.total')}:{' '}
               <span className="font-semibold tabular-nums">{money(total)}</span>
             </div>
           </div>
@@ -444,10 +452,10 @@ function OrderDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit" disabled={!canSave || mut.isPending}>
-              {mut.isPending ? 'Saving…' : 'Create order'}
+              {mut.isPending ? t('common.saving') : t('salesOrders.createOrder')}
             </Button>
           </DialogFooter>
         </form>

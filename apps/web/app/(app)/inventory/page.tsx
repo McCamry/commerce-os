@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { useT } from '@/lib/i18n';
 import {
   Table,
   TableBody,
@@ -26,6 +27,7 @@ interface InventoryRow {
 }
 
 export default function InventoryPage() {
+  const t = useT();
   const levels = useQuery({
     queryKey: ['inventory'],
     queryFn: () => api.get<InventoryRow[]>('/inventory'),
@@ -33,29 +35,33 @@ export default function InventoryPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-semibold">Inventory</h1>
+      <h1 className="text-2xl font-semibold">{t('inventory.title')}</h1>
       <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-        {levels.data?.length ?? 0} stock record(s) across your warehouses
+        {t('inventory.subtitle', { count: levels.data?.length ?? 0 })}
       </p>
 
       <div className="mt-6 rounded-xl border bg-[var(--color-card)]">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Variant</TableHead>
-              <TableHead>Warehouse</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Lot / Serial</TableHead>
-              <TableHead className="text-right">On-hand</TableHead>
-              <TableHead className="text-right">Reserved</TableHead>
-              <TableHead className="text-right">Available</TableHead>
+              <TableHead>{t('inventory.variant')}</TableHead>
+              <TableHead>{t('inventory.warehouse')}</TableHead>
+              <TableHead>{t('inventory.location')}</TableHead>
+              <TableHead>{t('inventory.lotSerial')}</TableHead>
+              <TableHead className="text-right">{t('inventory.onHand')}</TableHead>
+              <TableHead className="text-right">
+                {t('inventory.reserved')}
+              </TableHead>
+              <TableHead className="text-right">
+                {t('inventory.available')}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {levels.isLoading && (
               <TableRow>
                 <TableCell colSpan={7} className="py-8 text-center">
-                  Loading…
+                  {t('common.loading')}
                 </TableCell>
               </TableRow>
             )}
@@ -75,7 +81,7 @@ export default function InventoryPage() {
                   colSpan={7}
                   className="py-8 text-center text-[var(--color-muted-foreground)]"
                 >
-                  No stock yet. Receive goods against a purchase order.
+                  {t('inventory.empty')}
                 </TableCell>
               </TableRow>
             )}
