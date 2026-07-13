@@ -8,6 +8,10 @@ import {
   Users,
   ShoppingCart,
   Boxes,
+  Truck,
+  Warehouse,
+  Ruler,
+  FolderTree,
   Languages,
   LogOut,
 } from 'lucide-react';
@@ -25,6 +29,10 @@ const nav = [
   { href: '/customers', key: 'nav.customers', icon: Users },
   { href: '/sales-orders', key: 'nav.salesOrders', icon: ShoppingCart },
   { href: '/inventory', key: 'nav.inventory', icon: Boxes },
+  { href: '/vendors', key: 'nav.vendors', icon: Truck },
+  { href: '/warehouses', key: 'nav.warehouses', icon: Warehouse },
+  { href: '/units', key: 'nav.units', icon: Ruler },
+  { href: '/categories', key: 'nav.categories', icon: FolderTree },
   { href: '/settings/translations', key: 'nav.translations', icon: Languages },
 ] as const;
 
