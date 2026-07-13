@@ -60,60 +60,72 @@ export class SalesOrdersService {
       let allItemsReserved = true;
 
       for (const item of order.items) {
-        // Find inventory for this variant at the selected warehouse
-        const inventory = await tx.inventoryLocation.findFirst({
+        // Gather ALL inventory rows for this variant across the warehouse
+        // (stock may be spread over multiple locations/lots). Reserve against
+        // the aggregate availability, oldest stock first (FIFO).
+        const inventories = await tx.inventoryLocation.findMany({
           where: {
             productVariantId: item.variantId,
             location: { warehouseId: order.warehouseId },
           },
+          orderBy: { lastMovementAt: 'asc' },
         });
 
-        if (!inventory) {
+        if (inventories.length === 0) {
           throw new BadRequestException(
             `No inventory record found for variant ${item.variantId} in this warehouse`,
           );
         }
 
-        const availableQty = inventory.availableQty;
+        const totalAvailable = inventories.reduce(
+          (sum, inv) => sum + inv.availableQty,
+          0,
+        );
         const requiredQty = item.quantity;
+        const reservedQty = Math.min(totalAvailable, requiredQty);
 
-        let reservedQty = 0;
-        if (availableQty >= requiredQty) {
-          reservedQty = requiredQty;
-        } else {
-          reservedQty = availableQty; // Reserve whatever is left
-          allItemsReserved = false;
+        if (reservedQty < requiredQty) {
+          allItemsReserved = false; // Partial reservation → backorder
         }
 
-        // Update Order Item
-        await tx.salesOrderItem.update({
-          where: { id: item.id },
-          data: { reservedQty },
-        });
+        // Distribute the reservation across locations (greedy, FIFO)
+        let remaining = reservedQty;
+        for (const inv of inventories) {
+          if (remaining <= 0) break;
+          const take = Math.min(remaining, inv.availableQty);
+          if (take <= 0) continue;
 
-        // Update Inventory if we reserved anything
-        if (reservedQty > 0) {
           await tx.inventoryLocation.update({
-            where: { id: inventory.id },
+            where: { id: inv.id },
             data: {
-              availableQty: { decrement: reservedQty },
-              reservedQty: { increment: reservedQty },
+              availableQty: { decrement: take },
+              reservedQty: { increment: take },
+              lastMovementAt: new Date(),
             },
           });
 
-          // Create Inventory Movement
           await tx.inventoryMovement.create({
             data: {
-              toLocationId: inventory.warehouseLocationId,
+              toLocationId: inv.warehouseLocationId,
               variantId: item.variantId,
+              lotId: inv.lotId,
+              serialId: inv.serialId,
               type: 'SALES_RESERVE',
-              quantity: reservedQty,
+              quantity: take,
               referenceType: 'SALES_ORDER',
               referenceId: order.id,
               movedBy: performedBy,
             },
           });
+
+          remaining -= take;
         }
+
+        // Record the total reserved against the order item
+        await tx.salesOrderItem.update({
+          where: { id: item.id },
+          data: { reservedQty },
+        });
       }
 
       // 4. Update Order Status

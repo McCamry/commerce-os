@@ -43,53 +43,76 @@ export class ShipmentsService {
         const orderItem = item.salesOrderItem;
         const shipQty = item.quantity;
 
-        // Deduct from Inventory (OnHand & Reserved)
-        const inventory = await tx.inventoryLocation.findFirst({
+        // Gather ALL inventory rows for this variant across the warehouse.
+        // Reserved/on-hand stock may be spread over multiple locations/lots,
+        // so validate and deduct against the aggregate, oldest stock first.
+        const inventories = await tx.inventoryLocation.findMany({
           where: {
             productVariantId: orderItem.variantId,
             location: { warehouseId: shipment.salesOrder.warehouseId },
           },
+          orderBy: { lastMovementAt: 'asc' },
         });
 
-        if (!inventory) {
+        if (inventories.length === 0) {
           throw new BadRequestException(
             `No inventory record found for variant ${orderItem.variantId}`,
           );
         }
 
-        if (inventory.reservedQty < shipQty) {
+        const totalReserved = inventories.reduce(
+          (sum, inv) => sum + inv.reservedQty,
+          0,
+        );
+        const totalOnHand = inventories.reduce(
+          (sum, inv) => sum + inv.quantity,
+          0,
+        );
+
+        if (totalReserved < shipQty) {
           throw new BadRequestException(
             `Insufficient reserved quantity for variant ${orderItem.variantId}`,
           );
         }
 
-        if (inventory.quantity < shipQty) {
+        if (totalOnHand < shipQty) {
           throw new BadRequestException(
             `Insufficient on-hand quantity for variant ${orderItem.variantId}`,
           );
         }
 
-        // Update Inventory
-        await tx.inventoryLocation.update({
-          where: { id: inventory.id },
-          data: {
-            quantity: { decrement: shipQty },
-            reservedQty: { decrement: shipQty },
-          },
-        });
+        // Deduct across the locations holding reserved stock (FIFO)
+        let remaining = shipQty;
+        for (const inv of inventories) {
+          if (remaining <= 0) break;
+          const take = Math.min(remaining, inv.reservedQty, inv.quantity);
+          if (take <= 0) continue;
 
-        // Create Inventory Movement
-        await tx.inventoryMovement.create({
-          data: {
-            fromLocationId: inventory.warehouseLocationId,
-            variantId: orderItem.variantId,
-            type: 'SALES_SHIPMENT',
-            quantity: -shipQty, // Negative for deduction
-            referenceType: 'SHIPMENT',
-            referenceId: shipment.id,
-            movedBy: performedBy,
-          },
-        });
+          await tx.inventoryLocation.update({
+            where: { id: inv.id },
+            data: {
+              quantity: { decrement: take },
+              reservedQty: { decrement: take },
+              lastMovementAt: new Date(),
+            },
+          });
+
+          await tx.inventoryMovement.create({
+            data: {
+              fromLocationId: inv.warehouseLocationId,
+              variantId: orderItem.variantId,
+              lotId: inv.lotId,
+              serialId: inv.serialId,
+              type: 'SALES_SHIPMENT',
+              quantity: -take, // Negative for deduction
+              referenceType: 'SHIPMENT',
+              referenceId: shipment.id,
+              movedBy: performedBy,
+            },
+          });
+
+          remaining -= take;
+        }
 
         // Update Order Item shippedQty
         await tx.salesOrderItem.update({
