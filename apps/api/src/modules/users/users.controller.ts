@@ -7,7 +7,6 @@ import {
   Patch,
   Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,20 +19,18 @@ export class UsersController {
 
   @Get()
   findAll(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('search') search?: string,
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.usersService.findAll({ organizationId, search });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  findOne(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.usersService.findOne(id, organizationId);
   }
 
   @Post()
@@ -45,12 +42,19 @@ export class UsersController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
-    return this.usersService.update(id, dto);
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.usersService.update(id, dto, organizationId);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  remove(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.usersService.remove(id, organizationId);
   }
 }

@@ -47,9 +47,12 @@ export class RolesPermissionsService {
     return roles as unknown as Record<string, unknown>[];
   }
 
-  async findOneRole(id: string): Promise<Record<string, unknown>> {
+  async findOneRole(
+    id: string,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
     const role = await this.prisma.role.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
       include: {
         rolePermissions: {
           include: {
@@ -116,8 +119,9 @@ export class RolesPermissionsService {
   async updateRole(
     id: string,
     dto: UpdateRoleDto,
+    organizationId: string,
   ): Promise<Record<string, unknown>> {
-    const role = await this.findOneRole(id);
+    const role = await this.findOneRole(id, organizationId);
 
     if (role.isSystem) {
       throw new BadRequestException('System roles cannot be modified');
@@ -167,8 +171,11 @@ export class RolesPermissionsService {
     }
   }
 
-  async removeRole(id: string): Promise<Record<string, unknown>> {
-    const role = await this.findOneRole(id);
+  async removeRole(
+    id: string,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
+    const role = await this.findOneRole(id, organizationId);
 
     if (role.isSystem) {
       throw new BadRequestException('System roles cannot be deleted');
@@ -188,8 +195,9 @@ export class RolesPermissionsService {
   async updateRolePermissions(
     roleId: string,
     permissionIds: string[],
+    organizationId: string,
   ): Promise<Record<string, unknown>> {
-    const role = await this.findOneRole(roleId);
+    const role = await this.findOneRole(roleId, organizationId);
 
     if (role.isSystem) {
       throw new BadRequestException(

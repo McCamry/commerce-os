@@ -53,9 +53,12 @@ export class UsersService {
     );
   }
 
-  async findOne(id: string): Promise<Record<string, unknown>> {
+  async findOne(
+    id: string,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
     const user = await this.prisma.user.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId, deletedAt: null },
       include: {
         defaultStore: true,
         userRoles: {
@@ -124,7 +127,7 @@ export class UsersService {
         return u;
       });
 
-      return this.findOne(user.id);
+      return this.findOne(user.id, organizationId);
     } catch (error) {
       this.handleWriteError(error);
     }
@@ -133,8 +136,9 @@ export class UsersService {
   async update(
     id: string,
     dto: UpdateUserDto,
+    organizationId: string,
   ): Promise<Record<string, unknown>> {
-    await this.findOne(id);
+    await this.findOne(id, organizationId);
 
     const updateData: Prisma.UserUpdateInput = {
       email: dto.email,
@@ -189,14 +193,17 @@ export class UsersService {
         }
       });
 
-      return this.findOne(id);
+      return this.findOne(id, organizationId);
     } catch (error) {
       this.handleWriteError(error);
     }
   }
 
-  async remove(id: string): Promise<Record<string, unknown>> {
-    await this.findOne(id);
+  async remove(
+    id: string,
+    organizationId: string,
+  ): Promise<Record<string, unknown>> {
+    await this.findOne(id, organizationId);
 
     const user = await this.prisma.user.update({
       where: { id },

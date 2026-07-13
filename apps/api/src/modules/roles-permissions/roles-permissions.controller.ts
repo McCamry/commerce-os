@@ -25,20 +25,18 @@ export class RolesPermissionsController {
 
   @Get('roles')
   findAllRoles(
-    @Query('organizationId') organizationId: string,
+    @CurrentUser('organizationId') organizationId: string,
     @Query('status') status?: 'ACTIVE' | 'INACTIVE',
   ) {
-    if (!organizationId) {
-      throw new BadRequestException(
-        'organizationId query parameter is required',
-      );
-    }
     return this.service.findAllRoles({ organizationId, status });
   }
 
   @Get('roles/:id')
-  findOneRole(@Param('id') id: string) {
-    return this.service.findOneRole(id);
+  findOneRole(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.service.findOneRole(id, organizationId);
   }
 
   @Post('roles')
@@ -50,25 +48,37 @@ export class RolesPermissionsController {
   }
 
   @Patch('roles/:id')
-  updateRole(@Param('id') id: string, @Body() dto: UpdateRoleDto) {
-    return this.service.updateRole(id, dto);
+  updateRole(
+    @Param('id') id: string,
+    @Body() dto: UpdateRoleDto,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.service.updateRole(id, dto, organizationId);
   }
 
   @Delete('roles/:id')
-  removeRole(@Param('id') id: string) {
-    return this.service.removeRole(id);
+  removeRole(
+    @Param('id') id: string,
+    @CurrentUser('organizationId') organizationId: string,
+  ) {
+    return this.service.removeRole(id, organizationId);
   }
 
   @Patch('roles/:id/permissions')
   updateRolePermissions(
     @Param('id') id: string,
     @Body('permissionIds') permissionIds: string[],
+    @CurrentUser('organizationId') organizationId: string,
   ) {
     if (!Array.isArray(permissionIds)) {
       throw new BadRequestException(
         'permissionIds must be an array of strings',
       );
     }
-    return this.service.updateRolePermissions(id, permissionIds);
+    return this.service.updateRolePermissions(
+      id,
+      permissionIds,
+      organizationId,
+    );
   }
 }
