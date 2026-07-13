@@ -1,19 +1,9 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { StockAdjustmentsService } from './stock-adjustments.service';
 import { CreateStockAdjustmentDto } from './dto/create-stock-adjustment.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @Controller('stock-adjustments')
-@UseGuards(JwtAuthGuard)
 export class StockAdjustmentsController {
   constructor(private readonly adjustmentsService: StockAdjustmentsService) {}
 
