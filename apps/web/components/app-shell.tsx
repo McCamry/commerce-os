@@ -12,6 +12,7 @@ import {
   Warehouse,
   Ruler,
   FolderTree,
+  ClipboardList,
   Languages,
   LogOut,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ const nav = [
   { href: '/products', key: 'nav.products', icon: Package },
   { href: '/customers', key: 'nav.customers', icon: Users },
   { href: '/sales-orders', key: 'nav.salesOrders', icon: ShoppingCart },
+  { href: '/purchase-orders', key: 'nav.purchaseOrders', icon: ClipboardList },
   { href: '/inventory', key: 'nav.inventory', icon: Boxes },
   { href: '/vendors', key: 'nav.vendors', icon: Truck },
   { href: '/warehouses', key: 'nav.warehouses', icon: Warehouse },
