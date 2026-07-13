@@ -36,3 +36,6 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# External tooling (nested repo, not part of this project)
+claude-antigravity-agents/

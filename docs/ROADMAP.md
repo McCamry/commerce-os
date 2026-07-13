@@ -1,28 +1,26 @@
-# CommerceOS Roadmap
+# Commerce OS Roadmap (20 Sprints)
 
-## Phase 1
-- Foundation
-- Authentication
-- Product
-- Category
-- Inventory
+This document outlines the 20-Sprint plan for building Commerce OS.
 
-## Phase 2
-- Orders
-- Customers
-- Dashboard
+- **Sprint 1: Core System** (Project Structure, Standards, DB Setup, Interceptors)
+- **Sprint 2: Product Catalog** (PIM, Categories, Brands, Variants, Pricing, Media)
+- **Sprint 3: Organization & Security** (Auth, RBAC, User Management, Stores, Organizations)
+- **Sprint 4: Inventory Management** (Warehouses, Locations, Stock Ledger, Transfers, Adjustments)
+- **Sprint 5: Purchasing** (Procurement, Supplier, PO, Goods Receipt, AP Sub-ledger)
+- **Sprint 6: Sales** (Sales Orders, Quotations, Invoicing, Customers, AR Sub-ledger)
+- **Sprint 7: Marketplace Sync** (Shopee, Lazada, TikTok Sync)
+- **Sprint 8: OMS** (Order Management System, Routing, Split Shipment, Allocation)
+- **Sprint 9: WMS** (Hierarchical Warehouse Management, Receiving, PutAway, Picking, Packing)
+- **Sprint 10: Financial & Accounting** (General Ledger, Multi-book, Cash & Bank, Tax, Budgeting, Rule Engine)
+- **Sprint 11: BI, Reporting & Analytics** (Metric Engine, Dashboards, Data Warehouse Fact Tables, Scheduled Reports, Alerts, Forecasts)
 
-## Phase 3
-- Shopee Connector
-
-## Phase 4
-- Lazada Connector
-
-## Phase 5
-- TikTok Connector
-
-## Phase 6
-- Website Connector
-
-## Phase 7
-- POS
+## 🚧 Upcoming Sprints (Growth, Automation & Ecosystem)
+- **Sprint 12: Promotion & Pricing Engine** (Campaigns, Dynamic Discounts, Vouchers, Bundles)
+- **Sprint 13: Customer Relationship Management (CRM)** (Loyalty Points, Memberships, Customer Segments)
+- **Sprint 14: Automation** (Event-driven Rules Engine, Workflows, Approvals)
+- **Sprint 15: Notification & Communication** (Email, SMS, Push, In-app Alerts, Template Engine)
+- **Sprint 16: Point of Sale (POS)** (Omnichannel Sales, Offline Mode, Cash Register, Shift Management)
+- **Sprint 17: Mobile WMS App** (Warehouse Scanner App, Mobile Receiving/Picking/Stock Count)
+- **Sprint 18: AI & Data Science** (Smart Replenishment, Sales Forecasting, NLP Search, Product Recommendations)
+- **Sprint 19: B2B Commerce Portal** (Wholesale Ordering, Multi-tier Approvals, Self-Service Customer Portal)
+- **Sprint 20: Ecosystem & Plugins** (App Store, Custom Webhooks, Public API, Third-Party Integrations)
