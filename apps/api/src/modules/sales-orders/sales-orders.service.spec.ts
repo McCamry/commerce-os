@@ -34,10 +34,10 @@ describe('SalesOrdersService', () => {
       );
 
     it('throws NotFoundException when the order does not exist', async () => {
-      runTx({ salesOrder: { findUnique: jest.fn().mockResolvedValue(null) } });
+      runTx({ salesOrder: { findFirst: jest.fn().mockResolvedValue(null) } });
 
       await expect(
-        service.confirmOrder('missing', 'user-1'),
+        service.confirmOrder('missing', 'user-1', 'org-1'),
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
@@ -45,14 +45,14 @@ describe('SalesOrdersService', () => {
     it('rejects confirming an order that is not in DRAFT status', async () => {
       runTx({
         salesOrder: {
-          findUnique: jest
+          findFirst: jest
             .fn()
             .mockResolvedValue({ id: 'so-1', status: 'CONFIRMED', items: [] }),
         },
       });
 
       await expect(
-        service.confirmOrder('so-1', 'user-1'),
+        service.confirmOrder('so-1', 'user-1', 'org-1'),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
@@ -88,7 +88,7 @@ describe('SalesOrdersService', () => {
       ];
       const tx = {
         salesOrder: {
-          findUnique: jest.fn().mockResolvedValue(order),
+          findFirst: jest.fn().mockResolvedValue(order),
           update: jest
             .fn()
             .mockImplementation(({ data }: { data: unknown }) =>
@@ -104,7 +104,7 @@ describe('SalesOrdersService', () => {
       };
       runTx(tx);
 
-      const result = await service.confirmOrder('so-1', 'user-1');
+      const result = await service.confirmOrder('so-1', 'user-1', 'org-1');
 
       expect(tx.inventoryLocation.update).toHaveBeenCalledTimes(2);
       // First location fully drained (4), second takes the remaining 6.
@@ -161,7 +161,7 @@ describe('SalesOrdersService', () => {
       ];
       const tx = {
         salesOrder: {
-          findUnique: jest.fn().mockResolvedValue(order),
+          findFirst: jest.fn().mockResolvedValue(order),
           update: jest
             .fn()
             .mockImplementation(({ data }: { data: unknown }) =>
@@ -177,7 +177,7 @@ describe('SalesOrdersService', () => {
       };
       runTx(tx);
 
-      const result = await service.confirmOrder('so-2', 'user-1');
+      const result = await service.confirmOrder('so-2', 'user-1', 'org-1');
 
       expect(tx.salesOrderItem.update).toHaveBeenCalledWith(
         expect.objectContaining({ data: { reservedQty: 3 } }),

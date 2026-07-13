@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CreateShipmentDto } from './dto/create-shipment.dto';
 
 @Injectable()
 export class ShipmentsService {
@@ -13,11 +14,69 @@ export class ShipmentsService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async markAsShipped(shipmentId: string, performedBy: string) {
+  async create(dto: CreateShipmentDto, organizationId: string) {
+    if (!dto.items || dto.items.length === 0) {
+      throw new BadRequestException('Shipment must contain at least one item');
+    }
+
+    // Ensure the sales order belongs to the caller's organization and that
+    // every shipment line references one of its order items.
+    const order = await this.prisma.salesOrder.findFirst({
+      where: { id: dto.salesOrderId, organizationId, deletedAt: null },
+      include: { items: { select: { id: true } } },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Sales Order not found');
+    }
+
+    const orderItemIds = new Set(order.items.map((i) => i.id));
+    for (const item of dto.items) {
+      if (!orderItemIds.has(item.salesOrderItemId)) {
+        throw new BadRequestException(
+          `Order item ${item.salesOrderItemId} does not belong to this sales order`,
+        );
+      }
+    }
+
+    try {
+      return await this.prisma.shipment.create({
+        data: {
+          salesOrderId: dto.salesOrderId,
+          shipmentNo: dto.shipmentNo,
+          carrier: dto.carrier,
+          trackingNo: dto.trackingNo,
+          status: 'PENDING',
+          items: {
+            create: dto.items.map((item) => ({
+              salesOrderItemId: item.salesOrderItemId,
+              quantity: item.quantity,
+            })),
+          },
+        },
+        include: { items: true },
+      });
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        'code' in error &&
+        (error as { code?: string }).code === 'P2002'
+      ) {
+        throw new BadRequestException('Shipment number already exists');
+      }
+      throw error;
+    }
+  }
+
+  async markAsShipped(
+    shipmentId: string,
+    performedBy: string,
+    organizationId: string,
+  ) {
     const result = await this.prisma.$transaction(async (tx) => {
-      // 1. Fetch Shipment with Items and SalesOrder
-      const shipment = await tx.shipment.findUnique({
-        where: { id: shipmentId },
+      // 1. Fetch Shipment with Items and SalesOrder (scoped to the org)
+      const shipment = await tx.shipment.findFirst({
+        where: { id: shipmentId, salesOrder: { organizationId } },
         include: {
           items: {
             include: { salesOrderItem: true },

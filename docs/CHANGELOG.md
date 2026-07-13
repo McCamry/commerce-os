@@ -10,6 +10,7 @@
 
 ### Added
 - Wire the fulfillment backbone (previously service logic with no routes): `POST/GET /purchase-orders` (+ `POST /purchase-orders/:id/approve`), `POST /goods-receives`, `POST /sales-orders/:id/confirm`, and `POST /shipments/:id/ship`. All org/user context comes from the JWT; goods-receive `receivedBy` is the authenticated user.
+- Sales-order and shipment creation, completing the order-to-cash chain: `POST/GET /sales-orders` (+ `GET /:id`) with server-side totals, and `POST /shipments` (validates the referenced sales order and its line items belong to the caller's org). `confirmOrder` and `markAsShipped` are now organization-scoped. Verified end-to-end: create sales order → confirm (reserves stock, RESERVED) → create shipment → ship (deducts on-hand).
 - Customers module: full CRUD REST API (`/customers`), organization-scoped with soft delete.
 - Vendors module: full CRUD REST API (`/vendors`), organization-scoped with soft delete.
 - Quotations module: CRUD REST API (`/quotations`) with line items and server-side total calculation; item replacement on update runs in a transaction.

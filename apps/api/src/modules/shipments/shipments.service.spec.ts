@@ -34,10 +34,10 @@ describe('ShipmentsService', () => {
       );
 
     it('throws NotFoundException when the shipment does not exist', async () => {
-      runTx({ shipment: { findUnique: jest.fn().mockResolvedValue(null) } });
+      runTx({ shipment: { findFirst: jest.fn().mockResolvedValue(null) } });
 
       await expect(
-        service.markAsShipped('missing', 'user-1'),
+        service.markAsShipped('missing', 'user-1', 'org-1'),
       ).rejects.toBeInstanceOf(NotFoundException);
       expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
@@ -45,7 +45,7 @@ describe('ShipmentsService', () => {
     it('rejects shipping a shipment that is not PENDING', async () => {
       runTx({
         shipment: {
-          findUnique: jest.fn().mockResolvedValue({
+          findFirst: jest.fn().mockResolvedValue({
             id: 'sh-1',
             status: 'SHIPPED',
             items: [],
@@ -55,7 +55,7 @@ describe('ShipmentsService', () => {
       });
 
       await expect(
-        service.markAsShipped('sh-1', 'user-1'),
+        service.markAsShipped('sh-1', 'user-1', 'org-1'),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
 
@@ -93,7 +93,7 @@ describe('ShipmentsService', () => {
       ];
       const tx = {
         shipment: {
-          findUnique: jest.fn().mockResolvedValue(shipment),
+          findFirst: jest.fn().mockResolvedValue(shipment),
           update: jest.fn().mockResolvedValue({}),
         },
         inventoryLocation: {
@@ -111,7 +111,7 @@ describe('ShipmentsService', () => {
       };
       runTx(tx);
 
-      await service.markAsShipped('sh-1', 'user-1');
+      await service.markAsShipped('sh-1', 'user-1', 'org-1');
 
       expect(tx.inventoryLocation.update).toHaveBeenNthCalledWith(
         1,
@@ -167,7 +167,7 @@ describe('ShipmentsService', () => {
       ];
       const tx = {
         shipment: {
-          findUnique: jest.fn().mockResolvedValue(shipment),
+          findFirst: jest.fn().mockResolvedValue(shipment),
           update: jest.fn().mockResolvedValue({}),
         },
         inventoryLocation: {
@@ -184,7 +184,7 @@ describe('ShipmentsService', () => {
       runTx(tx);
 
       await expect(
-        service.markAsShipped('sh-2', 'user-1'),
+        service.markAsShipped('sh-2', 'user-1', 'org-1'),
       ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
